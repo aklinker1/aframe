@@ -1,3 +1,4 @@
 declare module "aframe:server-main" {
-  export const server: import("./server").AframeServer;
+  const server: import("./server").AframeServer;
+  export default server;
 }

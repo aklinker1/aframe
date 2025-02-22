@@ -12,7 +12,7 @@ async function dev(root?: string) {
 
   await devServer.listen(config.appPort).then(() => {
     const js = [
-      `import { server } from '${config.serverModule}';`,
+      `import server from '${config.serverModule}';`,
       `server.listen(${config.serverPort});`,
     ].join("\n");
     Bun.spawn({
