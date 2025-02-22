@@ -63,7 +63,7 @@ export default app;
 </html>
 ```
 
-```json
+```jsonc
 // package.json
 {
   "name": "my-app",
