@@ -1,0 +1,51 @@
+{
+  "name": "@aklinker1/aframe",
+  "version": "0.1.0",
+  "packageManager": "bun@1.2.2",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./server": "./src/server.ts",
+    "./env": "./src/env.d.ts"
+  },
+  "bin": {
+    "aframe": "bin/aframe.ts"
+  },
+  "files": [
+    "src",
+    "bin"
+  ],
+  "scripts": {
+    "check": "check",
+    "dev": "bun bin/aframe.ts demo",
+    "build": "bun bin/aframe.ts build demo",
+    "preview": "bun --cwd demo/.output server-entry.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@aklinker1/check": "^1.4.5",
+    "@prerenderer/renderer-puppeteer": "1.2.4",
+    "@types/bun": "latest",
+    "oxlint": "^0.15.11",
+    "prettier": "^3.5.2",
+    "publint": "^0.3.6",
+    "puppeteer": "^24.2.1",
+    "typescript": "^5.0.0",
+    "vite": "^6.1.1"
+  },
+  "peerDependencies": {
+    "vite": "*",
+    "@prerenderer/prerenderer": "*",
+    "@prerenderer/renderer-jsdom": "*",
+    "@prerenderer/renderer-puppeteer": "*"
+  },
+  "peerDependenciesMeta": {
+    "@prerenderer/prerenderer-jsdom": {
+      "optional": true
+    },
+    "@prerenderer/renderer-puppeteer": {
+      "optional": true
+    }
+  }
+}
