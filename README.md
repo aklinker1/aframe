@@ -4,9 +4,19 @@ Simple wrapper around Vite for creating pre-rendered, client-side web apps with 
 
 ## Project Structure
 
+<!-- prettier-ignore -->
 ```html
-📂 {rootDir}/ 📁 app/ 📄 .env 📄 index.html 📄 main.ts 📁 public/ 📄 favicon.ico
-📁 server/ 📄 .env 📄 main.ts 📄 aframe.config.ts
+📂 {rootDir}/
+   📁 app/
+      📄 .env
+      📄 index.html
+      📄 main.ts
+   📁 public/
+      📄 favicon.ico
+   📁 server/
+      📄 .env
+      📄 main.ts
+   📄 aframe.config.ts
 ```
 
 ```ts
