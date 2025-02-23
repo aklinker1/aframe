@@ -20,7 +20,7 @@
     "check": "check",
     "dev": "bun bin/aframe.ts demo",
     "build": "bun bin/aframe.ts build demo",
-    "preview": "bun --cwd demo/.output server-entry.js"
+    "preview": "bun --cwd demo/.output --env-file ../.env server-entry.js"
   },
   "dependencies": {},
   "devDependencies": {

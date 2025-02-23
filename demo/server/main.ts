@@ -1,5 +1,7 @@
 import { fetchStatic, type AframeServer } from "../../src/server";
 
+console.log("process.env.EXAMPLE:", process.env.EXAMPLE);
+
 const server: AframeServer = {
   listen(port) {
     Bun.serve({

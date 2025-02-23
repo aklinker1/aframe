@@ -232,6 +232,7 @@ export async function resolveConfig(
       configFile: false,
       root: appDir,
       publicDir,
+      envDir: rootDir,
       build: {
         outDir: appOutDir,
       },

@@ -8,14 +8,13 @@ Simple wrapper around Vite for creating pre-rendered, client-side web apps with 
 ```html
 📂 {rootDir}/
    📁 app/
-      📄 .env
       📄 index.html
       📄 main.ts
    📁 public/
       📄 favicon.ico
    📁 server/
-      📄 .env
       📄 main.ts
+   📄 .env
    📄 aframe.config.ts
 ```
 
@@ -72,7 +71,7 @@ export default app;
   "scripts": {
     "dev": "aframe",
     "build": "aframe build",
-    "preview": "bun --cwd .output server-entry.js"
+    "preview": "bun --cwd .output --env-file ../.env server-entry.js"
   },
   "dependencies": {
     "@aklinker1/aframe": "@latest",
@@ -82,4 +81,28 @@ export default app;
     "vite": "@latest",
   }
 }
+```
+
+## Usage
+
+### Environment
+
+Create a single `.env` file in your project root. `app` secrets must be prefixed with `VITE_`, whereas `server` secrets don't need any prefix:
+
+```sh
+# {rootDir}/.env
+VITE_DEFAULT_MODEL=gemini-2.0-flash
+OPENAI_API_KEY=...
+```
+
+In this case, you could use `import.meta.env.VITE_DEFAULT_MODEL` in your `app` code and `process.env.OPENAI_API_KEY` in your server code.
+
+### Import files as text
+
+When importing a file as text, like an HTML template or a `.gql` schema, you should use `with { type: "text"
+ }`:
+
+```ts
+// server/main.ts
+import welcomeEmailTemplate from './assets/email-templates/welcome.html' with { type: "text" };
 ```

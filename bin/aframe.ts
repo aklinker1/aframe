@@ -2,7 +2,7 @@ import { build, createServer, resolveConfig } from "../src/mod";
 import { RESET, BOLD, DIM, UNDERLINE, GREEN, CYAN } from "../src/color";
 import { createTimer } from "../src/timer";
 
-const [_bun, _aframe, ...args] = Bun.argv;
+const [_bun, _aframe, ...args] = process.argv;
 
 async function dev(root?: string) {
   const devServerTimer = createTimer();
@@ -26,8 +26,8 @@ async function dev(root?: string) {
         "--eval",
         js,
       ],
-      // stdio: ["ignore", "inherit", "inherit"],
-      cwd: config.serverDir,
+      stdio: ["inherit", "inherit", "inherit"],
+      cwd: config.rootDir,
     });
   });
 
@@ -44,7 +44,7 @@ async function dev(root?: string) {
 }
 
 async function help() {
-  console.log("Help");
+  console.log("Help: TODO");
 }
 
 if (args[0] === "build") {
