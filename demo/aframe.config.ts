@@ -1,3 +1,3 @@
-import { defineConfig } from "../src/mod";
+import { defineConfig } from "../src";
 
 export default defineConfig({});

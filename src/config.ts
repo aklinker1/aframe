@@ -67,6 +67,7 @@ export async function resolveConfig(
   viteConfig = vite.mergeConfig<vite.InlineConfig, vite.InlineConfig>(
     // Defaults
     {
+      envPrefix: "APP_",
       build: {
         emptyOutDir: true,
       },

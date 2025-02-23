@@ -4,4 +4,4 @@ const p = document.createElement("p");
 p.textContent = "Hello world!";
 document.body.append(p);
 
-console.log("import.meta.env.VITE_EXAMPLE:", import.meta.env.VITE_EXAMPLE);
+console.log("import.meta.env.APP_EXAMPLE:", import.meta.env.APP_EXAMPLE);

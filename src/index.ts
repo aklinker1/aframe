@@ -9,6 +9,8 @@ import { RESET, DIM, GREEN, BLUE, MAGENTA, CYAN, BOLD } from "./color";
 import { createTimer } from "./timer";
 import { type ResolvedConfig, resolveConfig } from "./config";
 
+export * from "./config";
+
 export async function createServer(
   config: ResolvedConfig,
 ): Promise<vite.ViteDevServer> {

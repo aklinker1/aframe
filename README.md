@@ -87,11 +87,11 @@ export default app;
 
 ### Environment
 
-Create a single `.env` file in your project root. `app` secrets must be prefixed with `VITE_`, whereas `server` secrets don't need any prefix:
+Create a single `.env` file in your project root. `app` secrets must be prefixed with `APP_`, whereas `server` secrets don't need any prefix:
 
 ```sh
 # {rootDir}/.env
-VITE_DEFAULT_MODEL=gemini-2.0-flash
+APP_DEFAULT_MODEL=gemini-2.0-flash
 OPENAI_API_KEY=...
 ```
 
