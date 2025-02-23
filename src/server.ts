@@ -22,9 +22,13 @@ export async function fetchStatic(request: Request): Promise<Response> {
 
 function fetchRootHtml() {
   if (import.meta.command === "serve") {
-    return Response.json(
-      { status: 404, error: "Root index.html not served during development" },
-      { status: 404 },
+    return new Response(
+      `<html>
+        <body>
+          This is a placeholder for your root <code>index.html</code> file during development.
+          In production (or via the app's dev server), this path will fallback on the root <code>index.html</code>.
+        </body>
+      </html>`,
     );
   }
 
@@ -33,7 +37,8 @@ function fetchRootHtml() {
 
 async function isFile(file: BunFile): Promise<boolean> {
   try {
-    return (await file.stat()).isFile();
+    const stats = await file.stat();
+    return stats.isFile();
   } catch {
     return false;
   }
