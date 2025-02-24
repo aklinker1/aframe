@@ -8,35 +8,38 @@ export interface AframeServer {
   listen(port: number): void | never;
 }
 
-const cache: Record<string, BunFile> = {};
-
 /**
  * Fetches a file from the `public` directory.
  */
 export async function fetchStatic(request: Request): Promise<Response> {
   const path = new URL(request.url).pathname.replace(/\/+$/, "");
-  if (cache[path]) return new Response(cache[path], { headers });
 
   const paths = [
-    `${import.meta.publicDir}${path}.gz`,
     `${import.meta.publicDir}${path}`,
-    `${import.meta.publicDir}${path}/index.html.gz`,
     `${import.meta.publicDir}${path}/index.html`,
   ];
 
   // Only fallback on the root HTML file when building application
   if (import.meta.command === "build") {
-    paths.push(
-      `${import.meta.publicDir}/index.html.gz`,
-      `${import.meta.publicDir}/index.html`,
-    );
+    paths.push(`${import.meta.publicDir}/index.html`);
   }
 
   for (const path of paths) {
+    const gzFile = Bun.file(path + ".gz");
     const file = Bun.file(path);
+
+    if (await isFile(gzFile)) {
+      return new Response(gzFile.stream(), {
+        headers: {
+          ...headers,
+          "content-type": file.type,
+          "content-encoding": "gzip",
+        },
+      });
+    }
+
     if (await isFile(file)) {
-      cache[path] = file;
-      return new Response(file, { headers });
+      return new Response(file.stream(), { headers });
     }
   }
 
