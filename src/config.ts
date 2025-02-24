@@ -6,7 +6,7 @@ import { mkdir } from "node:fs/promises";
 export type UserConfig = {
   vite?: vite.UserConfigExport;
   prerenderedRoutes?: string[];
-  prerenderer?: PrerendererOptions;
+  prerenderer?: Partial<PrerendererOptions>;
 };
 
 export type ResolvedConfig = {
