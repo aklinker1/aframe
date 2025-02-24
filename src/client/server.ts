@@ -8,44 +8,53 @@ export interface AframeServer {
   listen(port: number): void | never;
 }
 
+const cache: Record<string, BunFile> = {};
+
 /**
  * Fetches a file from the `public` directory.
  */
 export async function fetchStatic(request: Request): Promise<Response> {
   const path = new URL(request.url).pathname.replace(/\/+$/, "");
-  if (!path) return fetchRootHtml();
+  if (cache[path]) return new Response(cache[path], { headers });
 
-  const exactFile = Bun.file(`${import.meta.publicDir}${path}`);
-  if (await isFile(exactFile)) return new Response(exactFile, { headers });
+  const paths = [
+    `${import.meta.publicDir}${path}.gz`,
+    `${import.meta.publicDir}${path}`,
+    `${import.meta.publicDir}${path}/index.html.gz`,
+    `${import.meta.publicDir}${path}/index.html`,
+  ];
 
-  const htmlFile = Bun.file(`${import.meta.publicDir}${path}/index.html`);
-  if (await isFile(htmlFile)) return new Response(exactFile, { headers });
-
-  return fetchRootHtml();
-}
-
-function fetchRootHtml() {
-  if (import.meta.command === "serve") {
-    return new Response(
-      `<html>
-        <body>
-          This is a placeholder for your root <code>index.html</code> file during development.
-          <br/>
-          In production (or via the app's dev server), this path will fallback on the root <code>index.html</code>.
-        </body>
-      </html>`,
-      {
-        headers: {
-          "Content-Type": "text/html",
-          ...headers,
-        },
-      },
+  // Only fallback on the root HTML file when building application
+  if (import.meta.command === "build") {
+    paths.push(
+      `${import.meta.publicDir}/index.html.gz`,
+      `${import.meta.publicDir}/index.html`,
     );
   }
 
-  return new Response(Bun.file(`${import.meta.publicDir}/index.html`), {
-    headers,
-  });
+  for (const path of paths) {
+    const file = Bun.file(path);
+    if (await isFile(file)) {
+      cache[path] = file;
+      return new Response(file, { headers });
+    }
+  }
+
+  return new Response(
+    `<html>
+      <body>
+        This is a placeholder for your root <code>index.html</code> file during development.
+        <br/>
+        In production (or via the app's dev server), this path will fallback on the root <code>index.html</code>.
+      </body>
+    </html>`,
+    {
+      headers: {
+        "Content-Type": "text/html",
+        ...headers,
+      },
+    },
+  );
 }
 
 async function isFile(file: BunFile): Promise<boolean> {

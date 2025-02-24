@@ -138,7 +138,8 @@ function getColor(file: string) {
   if (file.endsWith(".js")) return CYAN;
   if (file.endsWith(".html")) return GREEN;
   if (file.endsWith(".css")) return MAGENTA;
-  if (file.endsWith(".js.map")) return DIM;
+  if (file.endsWith(".map")) return DIM;
+  if (file.endsWith(".gz")) return DIM;
   return BLUE;
 }
 
