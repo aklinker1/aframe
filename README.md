@@ -106,3 +106,23 @@ When importing a file as text, like an HTML template or a `.gql` schema, you sho
 // server/main.ts
 import welcomeEmailTemplate from "./assets/email-templates/welcome.html" with { type: "text" };
 ```
+
+## Detecting Prerender
+
+When prerendering, the page is loaded with the `?prerendering` query param.
+
+Aframe provides a helper for checking this, `isPrerendering`:
+
+```vue
+<!-- ClientOnly.vue -->
+<script setup lang="ts">
+import { isPrerendering } from "@aklinker1/aframe/app";
+
+const visible = isPrerendering();
+</script>
+
+<template>
+  <slot v-if="visible" />
+  <slot v-else name="fallback" />
+</template>
+```
