@@ -1,4 +1,4 @@
-import { fetchStatic, type AframeServer } from "../../src/server";
+import { fetchStatic, type AframeServer } from "../../src/client/server";
 
 console.log("process.env.EXAMPLE:", process.env.EXAMPLE);
 

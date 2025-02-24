@@ -1,13 +1,12 @@
-import * as vite from "vite";
 import Prerenderer from "@prerenderer/prerenderer";
-import type { PrerendererOptions } from "@prerenderer/prerenderer";
-import { resolve, join, relative } from "node:path/posix";
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import { lstatSync } from "node:fs";
 import type { BunPlugin } from "bun";
-import { RESET, DIM, GREEN, BLUE, MAGENTA, CYAN, BOLD } from "./color";
+import { lstatSync } from "node:fs";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join, relative } from "node:path/posix";
+import * as vite from "vite";
+import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
+import type { ResolvedConfig } from "./config";
 import { createTimer } from "./timer";
-import { type ResolvedConfig, resolveConfig } from "./config";
 
 export * from "./config";
 
@@ -66,7 +65,11 @@ export async function build(config: ResolvedConfig) {
   const prerenderer = new Prerenderer(await config.prerenderer());
   const prerendered = await prerenderer
     .initialize()
-    .then(() => prerenderer.renderRoutes(config.prerenderedRoutes))
+    .then(() =>
+      prerenderer.renderRoutes(
+        config.prerenderedRoutes.map((route) => `${route}?prerender`),
+      ),
+    )
     .then((renderedRoutes) =>
       Promise.all(
         renderedRoutes.map(async (route) => {

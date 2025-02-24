@@ -6,7 +6,8 @@
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
-    "./server": "./src/server.ts",
+    "./server": "./src/client/server.ts",
+    "./app": "./src/client/app.ts",
     "./env": "./src/env.d.ts"
   },
   "bin": {

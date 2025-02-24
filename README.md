@@ -104,5 +104,5 @@ When importing a file as text, like an HTML template or a `.gql` schema, you sho
 
 ```ts
 // server/main.ts
-import welcomeEmailTemplate from './assets/email-templates/welcome.html' with { type: "text" };
+import welcomeEmailTemplate from "./assets/email-templates/welcome.html" with { type: "text" };
 ```
