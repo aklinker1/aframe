@@ -118,7 +118,7 @@ Aframe provides a helper for checking this, `isPrerendering`:
 <script setup lang="ts">
 import { isPrerendering } from "@aklinker1/aframe/app";
 
-const visible = isPrerendering();
+const visible = !isPrerendering();
 </script>
 
 <template>
