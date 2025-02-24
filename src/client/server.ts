@@ -1,5 +1,9 @@
 import type { BunFile } from "bun";
 
+const headers = {
+  "Cache-Control": "max-age=31536000",
+};
+
 export interface AframeServer {
   listen(port: number): void | never;
 }
@@ -12,10 +16,10 @@ export async function fetchStatic(request: Request): Promise<Response> {
   if (!path) return fetchRootHtml();
 
   const exactFile = Bun.file(`${import.meta.publicDir}${path}`);
-  if (await isFile(exactFile)) return new Response(exactFile);
+  if (await isFile(exactFile)) return new Response(exactFile, { headers });
 
   const htmlFile = Bun.file(`${import.meta.publicDir}${path}/index.html`);
-  if (await isFile(htmlFile)) return new Response(exactFile);
+  if (await isFile(htmlFile)) return new Response(exactFile, { headers });
 
   return fetchRootHtml();
 }
@@ -33,12 +37,15 @@ function fetchRootHtml() {
       {
         headers: {
           "Content-Type": "text/html",
+          ...headers,
         },
       },
     );
   }
 
-  return new Response(Bun.file(`${import.meta.publicDir}/index.html`));
+  return new Response(Bun.file(`${import.meta.publicDir}/index.html`), {
+    headers,
+  });
 }
 
 async function isFile(file: BunFile): Promise<boolean> {
