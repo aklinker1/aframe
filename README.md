@@ -13,6 +13,7 @@ Simple wrapper around Vite for creating pre-rendered, client-side web apps with 
    📁 public/
       📄 favicon.ico
    📁 server/
+      📄 env.d.ts
       📄 main.ts
    📄 .env
    📄 aframe.config.ts
@@ -32,6 +33,11 @@ export default defineConfig({
     // ...
   },
 });
+```
+
+```ts
+// server/env.d.ts
+/// <reference types="@aklinker1/aframe/env" />
 ```
 
 ```ts
