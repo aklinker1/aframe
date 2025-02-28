@@ -1,6 +1,6 @@
 {
   "name": "@aklinker1/aframe",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "packageManager": "bun@1.2.2",
   "type": "module",
   "license": "MIT",
