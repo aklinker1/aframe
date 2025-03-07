@@ -75,8 +75,9 @@ export default app;
   "version": "1.0.0",
   "packageManager": "bun@1.2.2",
   "scripts": {
-    "dev": "aframe",
-    "build": "aframe build",
+    "aframe": "bun node_modules/@aklinker1/aframe/bin/aframe.ts",
+    "dev": "bun --silent aframe",
+    "build": "bun --silent aframe build",
     "preview": "bun --cwd .output --env-file ../.env server-entry.js"
   },
   "dependencies": {
