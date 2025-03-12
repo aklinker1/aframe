@@ -68,6 +68,11 @@ export default app;
 </html>
 ```
 
+```sh
+bun add elysia @aklinker1/aframe
+bun add -D @prerenderer/prerenderer @prerenderer/renderer-puppeteer vite
+```
+
 ```jsonc
 // package.json
 {
@@ -81,11 +86,11 @@ export default app;
     "preview": "bun --cwd .output --env-file ../.env server-entry.js"
   },
   "dependencies": {
-    "@aklinker1/aframe": "@latest",
+  },
+  "devDependencies": {
     "@prerenderer/prerenderer": "@latest",
-    "@prerenderer/renderer-puppeteer": "@latest"
-    "elysia": "@latest"
-    "vite": "@latest",
+    "@prerenderer/renderer-puppeteer": "@latest",
+    "vite": "@latest"
   }
 }
 ```
