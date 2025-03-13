@@ -85,6 +85,7 @@ export async function build(config: ResolvedConfig) {
       ),
     )
     .catch((err) => {
+      console.error(err);
       throw err;
     })
     .finally(() => {
