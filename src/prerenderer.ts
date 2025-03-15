@@ -23,10 +23,17 @@ export async function prerenderPages(
   let browser: Browser | undefined;
 
   try {
+    let args = config.prerenderer.launch?.args ?? [];
+    // Workaround for Linux SUID Sandbox issues.
+    if (process.platform === "linux" && !args.includes("--no-sandbox")) {
+      args.push("--no-sandbox", "--disable-setuid-sandbox");
+    }
+
     browser = await puppeteer.launch({
       headless: true,
       timeout,
       ...config.prerenderer.launch,
+      args,
     });
     for (const route of config.prerenderedRoutes) {
       const url = new URL(route, `http://localhost:${config.appPort}`);
