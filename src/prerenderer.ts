@@ -55,6 +55,10 @@ export async function prerenderPages(
       const html = await page.content();
       await page.close();
 
+      if (html.includes("<vite-error-overlay>")) {
+        throw Error("Vite error prevented page from being rendered.");
+      }
+
       const dir = join(config.appOutDir, route.substring(1));
       const file = join(dir, "index.html");
       await mkdir(dir, { recursive: true });
