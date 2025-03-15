@@ -1,12 +1,25 @@
 import * as vite from "vite";
-import type { PrerendererOptions } from "@prerenderer/prerenderer";
 import { resolve, join, relative } from "node:path/posix";
 import { mkdir } from "node:fs/promises";
 
 export type UserConfig = {
   vite?: vite.UserConfigExport;
   prerenderedRoutes?: string[];
-  prerenderer?: Partial<PrerendererOptions>;
+  prerenderer?: PrerendererConfig;
+};
+
+export type PrerendererConfig = {
+  /** Wait for an selector`document.querySelector` to be in the DOM before grabbing the HTML. */
+  waitForSelector?: string;
+  /** When `waitForSelector` is set, also wait for the element to be visible before grabbing the HTML. */
+  waitForSelectorVisible?: boolean;
+  /** Wait a set timeout in milliseconds before grabbing the HTML. */
+  waitForTimeout?: number;
+  /**
+   * Timeout before prerendering throws an error.
+   * @default 30e3
+   */
+  timeout?: number;
 };
 
 export type ResolvedConfig = {
@@ -24,7 +37,7 @@ export type ResolvedConfig = {
   serverPort: number;
   vite: vite.InlineConfig;
   prerenderedRoutes: string[];
-  prerenderer: () => Promise<PrerendererOptions>;
+  prerenderer: PrerendererConfig;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -103,24 +116,6 @@ export async function resolveConfig(
     },
   );
 
-  const prerenderer = async (): Promise<PrerendererOptions> => {
-    const rendererModule =
-      tryResolve("@prerenderer/renderer-puppeteer") ??
-      tryResolve("@prerenderer/renderer-jsdom");
-    if (!rendererModule)
-      throw Error(
-        `No renderer installed. Did you forget to install @prerenderer/renderer-puppeteer or @prerenderer/renderer-jsdom?`,
-      );
-
-    const { default: Renderer } = await import(rendererModule);
-    const renderer = new Renderer();
-    return {
-      ...userConfig.prerenderer,
-      renderer,
-      staticDir: appOutDir,
-    };
-  };
-
   return {
     rootDir,
     appDir,
@@ -136,15 +131,7 @@ export async function resolveConfig(
     serverPort,
 
     prerenderedRoutes: userConfig.prerenderedRoutes ?? ["/"],
-    prerenderer,
     vite: viteConfig,
+    prerenderer: userConfig.prerenderer ?? {},
   };
-}
-
-function tryResolve(specifier: string): string | undefined {
-  try {
-    return import.meta.resolve(specifier);
-  } catch {
-    return undefined;
-  }
 }

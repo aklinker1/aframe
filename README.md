@@ -70,7 +70,7 @@ export default app;
 
 ```sh
 bun add elysia @aklinker1/aframe
-bun add -D @prerenderer/prerenderer @prerenderer/renderer-puppeteer vite
+bun add -D puppeteer vite
 ```
 
 ```jsonc
@@ -86,11 +86,12 @@ bun add -D @prerenderer/prerenderer @prerenderer/renderer-puppeteer vite
     "preview": "bun --cwd .output --env-file ../.env server-entry.js"
   },
   "dependencies": {
+    "@aklinker1/aframe": "latest",
+    "elysia": "latest"
   },
   "devDependencies": {
-    "@prerenderer/prerenderer": "@latest",
-    "@prerenderer/renderer-puppeteer": "@latest",
-    "vite": "@latest"
+    "vite": "latest",
+    "puppeteer": "latest",
   }
 }
 ```

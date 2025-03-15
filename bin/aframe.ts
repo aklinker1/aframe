@@ -10,27 +10,7 @@ async function dev(root?: string) {
   console.log(`${BOLD}${CYAN}ℹ${RESET} Spinning up dev servers...${RESET}`);
   const config = await resolveConfig(root, "serve", "development");
   const devServer = await createServer(config);
-
-  await devServer.listen(config.appPort).then(() => {
-    const js = [
-      `import server from '${config.serverModule}';`,
-      `server.listen(${config.serverPort});`,
-    ].join("\n");
-    Bun.spawn({
-      cmd: [
-        "bun",
-        "--watch",
-        "--define",
-        `import.meta.publicDir:"${config.publicDir}"`,
-        "--define",
-        `import.meta.command:"serve"`,
-        "--eval",
-        js,
-      ],
-      stdio: ["inherit", "inherit", "inherit"],
-      cwd: config.rootDir,
-    });
-  });
+  await devServer.listen();
 
   console.log(`${GREEN}✔${RESET} Dev servers started in ${devServerTimer()}`);
   console.log(

@@ -1,4 +1,3 @@
-import Prerenderer from "@prerenderer/prerenderer";
 import type { BunPlugin } from "bun";
 import { lstatSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -7,14 +6,10 @@ import * as vite from "vite";
 import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
 import type { ResolvedConfig } from "./config";
 import { createTimer } from "./timer";
+import { prerenderPages } from "./prerenderer";
 
 export * from "./config";
-
-export async function createServer(
-  config: ResolvedConfig,
-): Promise<vite.ViteDevServer> {
-  return await vite.createServer(config.vite);
-}
+export * from "./dev-server";
 
 export async function build(config: ResolvedConfig) {
   const buildTimer = createTimer();
@@ -62,35 +57,7 @@ export async function build(config: ResolvedConfig) {
         .map((route) => `  ${DIM}-${RESET} ${CYAN}${route}${RESET}`)
         .join("\n"),
   );
-  const prerenderer = new Prerenderer(await config.prerenderer());
-  const prerendered = await prerenderer
-    .initialize()
-    .then(() =>
-      prerenderer.renderRoutes(
-        config.prerenderedRoutes.map((route) => `${route}?prerender`),
-      ),
-    )
-    .then((renderedRoutes) =>
-      Promise.all(
-        renderedRoutes.map(async (route) => {
-          const dir = join(config.prerenderToDir, route.route);
-          const file = join(dir, "index.html");
-          await mkdir(dir, { recursive: true });
-          await writeFile(file, route.html.trim());
-          return {
-            ...route,
-            file,
-          };
-        }),
-      ),
-    )
-    .catch((err) => {
-      console.error(err);
-      throw err;
-    })
-    .finally(() => {
-      prerenderer.destroy();
-    });
+  const prerendered = await prerenderPages(config);
   console.log(`${GREEN}✔${RESET} Prerendered in ${prerenderTimer()}`);
 
   console.log();
