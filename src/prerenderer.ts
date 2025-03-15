@@ -24,7 +24,7 @@ export async function prerenderPages(
 
   try {
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       timeout,
     });
     for (const route of config.prerenderedRoutes) {
