@@ -26,10 +26,12 @@ export async function prerenderPages(
     browser = await puppeteer.launch({
       headless: true,
       timeout,
+      ...config.prerenderer.launch,
     });
     for (const route of config.prerenderedRoutes) {
       const url = new URL(route, `http://localhost:${config.appPort}`);
       const page = await browser.newPage();
+      page.evaluateOnNewDocument(`globalThis.__AFRAME_PRERENDERING = true`);
       page.setDefaultTimeout(timeout);
       page.setDefaultNavigationTimeout(timeout);
       await page.goto(url.href);

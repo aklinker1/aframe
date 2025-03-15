@@ -1,6 +1,10 @@
 /**
- * Return's `true` when the app is prerendering (when URL includes `?prerendering`).
+ * Return's `true` when the app is prerendering.
  */
 export function isPrerendering() {
-  return new URL(location.href).searchParams.has("prerendering");
+  return !!globalThis.__AFRAME_PRERENDERING;
+}
+
+declare global {
+  var __AFRAME_PRERENDERING: boolean;
 }

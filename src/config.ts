@@ -1,6 +1,7 @@
 import * as vite from "vite";
 import { resolve, join, relative } from "node:path/posix";
 import { mkdir } from "node:fs/promises";
+import type { LaunchOptions } from "puppeteer";
 
 export type UserConfig = {
   vite?: vite.UserConfigExport;
@@ -20,6 +21,8 @@ export type PrerendererConfig = {
    * @default 30e3
    */
   timeout?: number;
+  /** Configure puppeteer's launch options. */
+  launch?: LaunchOptions;
 };
 
 export type ResolvedConfig = {
