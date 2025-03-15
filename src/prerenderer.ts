@@ -16,8 +16,11 @@ export async function prerenderPages(
   const puppeteer = await import("puppeteer");
   const timeout = config.prerenderer.timeout ?? 30e3;
 
-  const server = await createServer(config);
-  await server.listen();
+  const server = Bun.spawn({
+    cmd: ["bun", "--env-file", "../.env", "server-entry.js"],
+    cwd: config.serverOutDir,
+    stdio: ["inherit", "inherit", "inherit"],
+  });
 
   const results: PrerenderedRoute[] = [];
   let browser: Browser | undefined;
@@ -69,7 +72,8 @@ export async function prerenderPages(
       });
     }
   } finally {
-    await Promise.allSettled([server.close(), browser?.close()]);
+    server.kill("SIGINT");
+    await browser?.close();
   }
 
   return results;
