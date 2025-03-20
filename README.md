@@ -139,3 +139,9 @@ const visible = !isPrerendering();
   <slot v-else name="fallback" />
 </template>
 ```
+
+## Publish Update to NPM
+
+```sh
+bun run publish
+```
