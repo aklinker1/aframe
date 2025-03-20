@@ -1,4 +1,5 @@
 import type { BunFile } from "bun";
+import { resolve } from "node:path";
 
 const headers = {
   "Cache-Control": "max-age=31536000",
@@ -7,6 +8,8 @@ const headers = {
 export interface AframeServer {
   listen(port: number): void | never;
 }
+
+const publicDir = resolve(import.meta.dir, import.meta.publicDir);
 
 /**
  * Fetches a file from the `public` directory.
@@ -21,14 +24,11 @@ export function fetchStatic(options?: {
   return async (request) => {
     const path = new URL(request.url).pathname.replace(/\/+$/, "");
 
-    const paths = [
-      `${import.meta.publicDir}${path}`,
-      `${import.meta.publicDir}${path}/index.html`,
-    ];
+    const paths = [`${publicDir}${path}`, `${publicDir}${path}/index.html`];
 
     // Only fallback on the root HTML file when building application
     if (import.meta.command === "build") {
-      paths.push(`${import.meta.publicDir}/index.html`);
+      paths.push(`${publicDir}/index.html`);
     }
 
     for (const path of paths) {
