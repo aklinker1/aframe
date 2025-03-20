@@ -122,9 +122,7 @@ import welcomeEmailTemplate from "./assets/email-templates/welcome.html" with { 
 
 ## Detecting Prerender
 
-When prerendering, the page is loaded with the `?prerendering` query param.
-
-Aframe provides a helper for checking this, `isPrerendering`:
+Aframe provides a helper for checking if the app is being prerendered, `isPrerendering()`:
 
 ```vue
 <!-- ClientOnly.vue -->
