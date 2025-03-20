@@ -6,7 +6,7 @@ import * as vite from "vite";
 import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
 import type { ResolvedConfig } from "./config";
 import { createTimer } from "./timer";
-import { prerenderPages } from "./prerenderer";
+import { prerenderPages, type PrerenderedRoute } from "./prerenderer";
 
 export * from "./config";
 export * from "./dev-server";
@@ -50,15 +50,20 @@ export async function build(config: ResolvedConfig) {
 
   console.log();
 
-  const prerenderTimer = createTimer();
-  console.log(
-    `${BOLD}${CYAN}ℹ${RESET} Prerendering...\n` +
-      config.prerenderedRoutes
-        .map((route) => `  ${DIM}-${RESET} ${CYAN}${route}${RESET}`)
-        .join("\n"),
-  );
-  const prerendered = await prerenderPages(config);
-  console.log(`${GREEN}✔${RESET} Prerendered in ${prerenderTimer()}`);
+  let prerendered: PrerenderedRoute[] = [];
+  if (config.prerenderer !== false) {
+    const prerenderTimer = createTimer();
+    console.log(
+      `${BOLD}${CYAN}ℹ${RESET} Prerendering...\n` +
+        config.prerenderedRoutes
+          .map((route) => `  ${DIM}-${RESET} ${CYAN}${route}${RESET}`)
+          .join("\n"),
+    );
+    prerendered = await prerenderPages(config);
+    console.log(`${GREEN}✔${RESET} Prerendered in ${prerenderTimer()}`);
+  } else {
+    console.log(`${DIM}${BOLD}→${RESET} Pre-rendering disabled`);
+  }
 
   console.log();
 

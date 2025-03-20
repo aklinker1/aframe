@@ -6,7 +6,7 @@ import type { LaunchOptions } from "puppeteer";
 export type UserConfig = {
   vite?: vite.UserConfigExport;
   prerenderedRoutes?: string[];
-  prerenderer?: PrerendererConfig;
+  prerenderer?: PrerendererConfig | false;
 };
 
 export type PrerendererConfig = {
@@ -40,7 +40,7 @@ export type ResolvedConfig = {
   serverPort: number;
   vite: vite.InlineConfig;
   prerenderedRoutes: string[];
-  prerenderer: PrerendererConfig;
+  prerenderer: PrerendererConfig | false;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {

@@ -2,7 +2,6 @@ import {} from "node:url";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import type { Browser } from "puppeteer";
-import { createServer } from "./dev-server";
 import type { ResolvedConfig } from "./config";
 
 export type PrerenderedRoute = {
@@ -13,6 +12,8 @@ export type PrerenderedRoute = {
 export async function prerenderPages(
   config: ResolvedConfig,
 ): Promise<PrerenderedRoute[]> {
+  if (config.prerenderer === false) return [];
+
   const puppeteer = await import("puppeteer");
   const timeout = config.prerenderer.timeout ?? 30e3;
 
