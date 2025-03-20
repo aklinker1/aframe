@@ -15,7 +15,13 @@ export async function prerenderPages(
   if (config.prerenderer === false) return [];
 
   const puppeteer = await import("puppeteer");
-  const timeout = config.prerenderer.timeout ?? 30e3;
+  const {
+    timeout = 30e3,
+    launch,
+    waitForSelector,
+    waitForSelectorVisible,
+    waitForTimeout,
+  } = config.prerenderer ?? {};
 
   const server = Bun.spawn({
     cmd: ["bun", "--env-file", "../.env", "server-entry.js"],
@@ -27,7 +33,7 @@ export async function prerenderPages(
   let browser: Browser | undefined;
 
   try {
-    let args = config.prerenderer.launch?.args ?? [];
+    let args = launch?.args ?? [];
     // Workaround for Linux SUID Sandbox issues.
     if (process.platform === "linux" && !args.includes("--no-sandbox")) {
       args.push("--no-sandbox", "--disable-setuid-sandbox");
@@ -36,7 +42,7 @@ export async function prerenderPages(
     browser = await puppeteer.launch({
       headless: true,
       timeout,
-      ...config.prerenderer.launch,
+      ...launch,
       args,
     });
     for (const route of config.prerenderedRoutes) {
@@ -46,14 +52,12 @@ export async function prerenderPages(
       page.setDefaultTimeout(timeout);
       page.setDefaultNavigationTimeout(timeout);
       await page.goto(url.href);
-      if (config.prerenderer.waitForSelector) {
-        await page.waitForSelector(config.prerenderer.waitForSelector, {
-          visible: config.prerenderer.waitForSelectorVisible,
+      if (waitForSelector) {
+        await page.waitForSelector(waitForSelector, {
+          visible: waitForSelectorVisible,
         });
-      } else if (config.prerenderer.waitForTimeout != null) {
-        await new Promise((res) =>
-          setTimeout(res, config.prerenderer.waitForTimeout),
-        );
+      } else if (waitForTimeout != null) {
+        await new Promise((res) => setTimeout(res, waitForTimeout));
       }
 
       const html = await page.content();

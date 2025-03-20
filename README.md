@@ -83,16 +83,16 @@ bun add -D puppeteer vite
     "aframe": "bun node_modules/@aklinker1/aframe/bin/aframe.ts",
     "dev": "bun --silent aframe",
     "build": "bun --silent aframe build",
-    "preview": "bun --cwd .output --env-file ../.env server-entry.js"
+    "preview": "bun --cwd .output --env-file ../.env server-entry.js",
   },
   "dependencies": {
     "@aklinker1/aframe": "latest",
-    "elysia": "latest"
+    "elysia": "latest",
   },
   "devDependencies": {
     "vite": "latest",
     "puppeteer": "latest",
-  }
+  },
 }
 ```
 

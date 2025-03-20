@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 import { lstatSync } from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
 import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
