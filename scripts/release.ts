@@ -2,8 +2,8 @@
 //
 // Usage:
 //
-//   bun run scripts/publish.ts [nextVersion]
-//   bun run publish [nextVersion]
+//   bun run scripts/release.ts [nextVersion]
+//   bun run release [nextVersion]
 //
 import pkg from "../package.json";
 import { BOLD, DIM, GREEN, RESET } from "../src/color";
@@ -27,3 +27,4 @@ console.log(`${DIM}${pkg.version}${RESET} → ${GREEN}${nextVersion}${RESET}`);
 await Bun.$`bun publish`;
 await Bun.$`git push`;
 await Bun.$`git push --tags`;
+await Bun.$`gh release create v${nextVersion} --generate-notes`;

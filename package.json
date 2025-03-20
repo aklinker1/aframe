@@ -23,7 +23,7 @@
     "dev": "bun aframe demo",
     "build": "bun aframe build demo",
     "preview": "bun --cwd demo/.output --env-file ../.env server-entry.js",
-    "publish": "bun run scripts/publish.ts"
+    "release": "bun run scripts/release.ts"
   },
   "dependencies": {},
   "devDependencies": {
