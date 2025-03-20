@@ -3,7 +3,7 @@
 // Usage:
 //
 //   bun run scripts/release.ts [nextVersion]
-//   bun run release [nextVersion]
+//   bun release [nextVersion]
 //
 import pkg from "../package.json";
 import { BOLD, DIM, GREEN, RESET } from "../src/color";
@@ -20,11 +20,12 @@ if (pkg.version.startsWith("0.")) {
 }
 
 const res = await Bun.$`npm version ${nextVersionArg} -m "chore(release): %s"`;
-const nextVersion = res.text().slice(1);
+const nextTag = res.text();
+const nextVersion = nextTag.slice(1);
 
 console.log(`${DIM}${pkg.version}${RESET} → ${GREEN}${nextVersion}${RESET}`);
 
 await Bun.$`bun publish`;
 await Bun.$`git push`;
 await Bun.$`git push --tags`;
-await Bun.$`gh release create v${nextVersion} --generate-notes`;
+await Bun.$`gh release create ${nextTag} --generate-notes`;
