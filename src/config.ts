@@ -5,6 +5,11 @@ import type { LaunchOptions } from "puppeteer";
 
 export type UserConfig = {
   vite?: vite.UserConfigExport;
+  /**
+   * Paths for vite to proxy to the backend during development.
+   * @default ["/api"]
+   */
+  proxyPaths?: string[];
   prerenderedRoutes?: string[];
   prerenderer?: PrerendererConfig | false;
 };
@@ -78,8 +83,8 @@ export async function resolveConfig(
   if (typeof viteConfig === "function") {
     viteConfig = await viteConfig({ command, mode });
   }
-  // Apply opinionated config that can be overwritten
 
+  // Apply opinionated config that can be overwritten
   viteConfig = vite.mergeConfig<vite.InlineConfig, vite.InlineConfig>(
     // Defaults
     {
@@ -93,6 +98,14 @@ export async function resolveConfig(
   );
 
   // Override required config
+  const proxyPaths = userConfig.proxyPaths ?? ["/api"];
+  const proxy: Record<string, string | vite.ProxyOptions> = {};
+  proxyPaths.forEach((path) => {
+    proxy[path] = {
+      target: `http://localhost:${serverPort}`,
+      changeOrigin: true,
+    };
+  });
   viteConfig = vite.mergeConfig<vite.InlineConfig, vite.InlineConfig>(
     // Defaults
     viteConfig,
@@ -109,12 +122,7 @@ export async function resolveConfig(
       server: {
         port: appPort,
         strictPort: true,
-        proxy: {
-          "/api": {
-            target: `http://localhost:${serverPort}`,
-            changeOrigin: true,
-          },
-        },
+        proxy,
       },
     },
   );
