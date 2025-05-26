@@ -16,9 +16,10 @@ async function dev(root?: string) {
   );
   devServer.printUrls();
 
+  const appProtocol = config.vite.server?.https == null ? "http:" : "https:";
   config.proxyPaths.forEach((path) => {
     console.log(
-      `  ${GREEN}→${RESET}  ${BOLD}Server:${RESET}  ${CYAN}http://localhost${BOLD}:${config.appPort}${RESET}${CYAN}${path}${RESET}`,
+      `  ${GREEN}→${RESET}  ${BOLD}Server:${RESET}  ${CYAN}${appProtocol}//localhost${BOLD}:${config.appPort}${RESET}${CYAN}${path}${RESET}`,
     );
   });
   console.log(
