@@ -12,6 +12,8 @@ export type UserConfig = {
   proxyPaths?: string[];
   prerenderedRoutes?: string[];
   prerenderer?: PrerendererConfig | false;
+  appPort?: number;
+  serverPort?: number;
 };
 
 export type PrerendererConfig = {
@@ -67,8 +69,6 @@ export async function resolveConfig(
   const appOutDir = join(outDir, "public");
   const serverOutDir = outDir;
   const prerenderToDir = appOutDir;
-  const appPort = 3000;
-  const serverPort = 3001;
 
   // Ensure required directories exist
   await mkdir(prerenderToDir, { recursive: true });
@@ -78,6 +78,9 @@ export async function resolveConfig(
   const { default: userConfig }: { default: UserConfig } = await import(
     relativeConfigFile
   );
+
+  const appPort = userConfig.appPort || 3000;
+  const serverPort = userConfig.serverPort || 3001;
 
   let viteConfig = await vite.defineConfig((await userConfig.vite) ?? {});
   if (typeof viteConfig === "function") {
