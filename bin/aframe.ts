@@ -11,16 +11,18 @@ async function dev(root?: string) {
   const config = await resolveConfig(root, "serve", "development");
   const devServer = await createServer(config);
   await devServer.listen();
+  console.log(
+    `${BOLD}${GREEN}✓${RESET} Dev servers started in ${devServerTimer()}`,
+  );
+  devServer.printUrls();
 
-  console.log(`${GREEN}✔${RESET} Dev servers started in ${devServerTimer()}`);
+  config.proxyPaths.forEach((path) => {
+    console.log(
+      `  ${GREEN}→${RESET}  ${BOLD}Server:${RESET}  ${CYAN}http://localhost${BOLD}:${config.appPort}${RESET}${CYAN}${path}${RESET}`,
+    );
+  });
   console.log(
-    `  ${BOLD}${GREEN}→${RESET} ${BOLD}App${RESET}          ${DIM}@${RESET} ${UNDERLINE}http://localhost:${config.appPort}${RESET}`,
-  );
-  console.log(
-    `  ${BOLD}${GREEN}→${RESET} ${BOLD}Server Proxy${RESET} ${DIM}@${RESET} ${UNDERLINE}http://localhost:${config.appPort}/api${RESET}`,
-  );
-  console.log(
-    `  ${BOLD}${GREEN}→${RESET} ${BOLD}Server${RESET}       ${DIM}@${RESET} ${UNDERLINE}http://localhost:${config.serverPort}${RESET}`,
+    `  ${GREEN}→${RESET}  ${BOLD}Server:${RESET}  ${CYAN}http://localhost${BOLD}:${config.serverPort}${RESET}${CYAN}${RESET}`,
   );
 }
 

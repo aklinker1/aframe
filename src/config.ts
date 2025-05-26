@@ -40,6 +40,7 @@ export type ResolvedConfig = {
   serverModule: string;
   serverEntry: string;
   prerenderToDir: string;
+  proxyPaths: string[];
   outDir: string;
   serverOutDir: string;
   appOutDir: string;
@@ -143,6 +144,7 @@ export async function resolveConfig(
     prerenderToDir,
     appPort,
     serverPort,
+    proxyPaths,
 
     prerenderedRoutes: userConfig.prerenderedRoutes ?? ["/"],
     vite: viteConfig,
