@@ -115,7 +115,6 @@ export async function resolveConfig(
     viteConfig,
     // Overrides
     {
-      // logLevel: "warn",
       configFile: false,
       root: appDir,
       publicDir,
