@@ -22,6 +22,7 @@ if (pkg.version.startsWith("0.")) {
 const res = await Bun.$`npm version ${nextVersionArg} -m "chore(release): %s"`;
 const nextTag = res.text();
 const nextVersion = nextTag.slice(1);
+console.log({ nextTag, nextVersion });
 
 console.log(`${DIM}${pkg.version}${RESET} → ${GREEN}${nextVersion}${RESET}`);
 
