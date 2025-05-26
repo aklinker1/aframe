@@ -15,13 +15,6 @@ async function dev(root?: string) {
     `${BOLD}${GREEN}✓${RESET} Dev servers started in ${devServerTimer()}`,
   );
   devServer.printUrls();
-
-  const appProtocol = config.vite.server?.https == null ? "http:" : "https:";
-  config.proxyPaths.forEach((path) => {
-    console.log(
-      `  ${GREEN}→${RESET}  ${BOLD}Server:${RESET}  ${CYAN}${appProtocol}//localhost${BOLD}:${config.appPort}${RESET}${CYAN}${path}${RESET}`,
-    );
-  });
   console.log(
     `  ${GREEN}→${RESET}  ${BOLD}Server:${RESET}  ${CYAN}http://localhost${BOLD}:${config.serverPort}${RESET}${CYAN}${RESET}`,
   );
