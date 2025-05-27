@@ -67,7 +67,6 @@ export function fetchStatic(options?: {
       {
         headers: {
           "Content-Type": "text/html",
-          ...headers,
         },
       },
     );
