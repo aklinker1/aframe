@@ -141,5 +141,5 @@ const visible = !isPrerendering();
 ## Publish Update to NPM
 
 ```sh
-bun run release
+bun run release patch
 ```
