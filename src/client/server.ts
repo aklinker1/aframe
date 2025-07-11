@@ -17,7 +17,6 @@ let staticPaths: Record<string, { cacheable: boolean; path: string }> = {};
 try {
   staticPaths = JSON.parse(readFileSync(staticPathsFile, "utf-8"));
 } catch {}
-console.log(staticPaths);
 
 /**
  * Fetches a file from the `public` directory.
@@ -31,7 +30,6 @@ export function fetchStatic(options?: {
 }): (request: Request) => Promise<Response> {
   return async (request) => {
     const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
-    console.log({ path, route: staticPaths[path] });
 
     // Fetch file on disk
     if (staticPaths[path]) {
