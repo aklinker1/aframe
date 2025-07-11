@@ -1,6 +1,6 @@
 import { build, createServer } from "../src";
 import { resolveConfig } from "../src/config";
-import { RESET, BOLD, DIM, UNDERLINE, GREEN, CYAN } from "../src/color";
+import { RESET, BOLD, GREEN, CYAN } from "../src/color";
 import { createTimer } from "../src/timer";
 
 const [_bun, _aframe, ...args] = process.argv;

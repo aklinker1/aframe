@@ -1,12 +1,13 @@
 import {} from "node:url";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import type { Browser } from "puppeteer";
 import type { ResolvedConfig } from "./config";
 
 export type PrerenderedRoute = {
   route: string;
-  file: string;
+  absolutePath: string;
+  relativePath: string;
 };
 
 export async function prerenderPages(
@@ -67,13 +68,15 @@ export async function prerenderPages(
         throw Error("Vite error prevented page from being rendered.");
       }
 
-      const dir = join(config.appOutDir, route.substring(1));
-      const file = join(dir, "index.html");
+      const relativePath = join(route.substring(1), "index.html");
+      const absolutePath = join(config.prerenderedDir, relativePath);
+      const dir = dirname(absolutePath);
       await mkdir(dir, { recursive: true });
-      await writeFile(file, html);
+      await writeFile(absolutePath, html);
       results.push({
-        file,
         route,
+        relativePath,
+        absolutePath,
       });
     }
   } finally {

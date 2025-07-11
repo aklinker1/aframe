@@ -1,6 +1,6 @@
 import type { BunPlugin } from "bun";
 import { lstatSync } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
 import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
@@ -22,10 +22,39 @@ export async function build(config: ResolvedConfig) {
   console.log(
     `${BOLD}${CYAN}ℹ${RESET} Building ${CYAN}./app${RESET} with ${GREEN}Vite ${vite.version}${RESET}`,
   );
-  const { output: app } = (await vite.build(
-    config.vite,
-  )) as vite.Rollup.RollupOutput;
+  const appOutput = (await vite.build(config.vite)) as vite.Rollup.RollupOutput;
   console.log(`${GREEN}✔${RESET} Built in ${appTimer()}`);
+
+  const allAppFiles = (
+    await readdir(config.appOutDir, { recursive: true, withFileTypes: true })
+  )
+    .filter((entry) => entry.isFile())
+    .map((entry) =>
+      relative(config.appOutDir, join(entry.parentPath, entry.name)),
+    );
+
+  const bundledAppFiles = appOutput.output.map((entry) => entry.fileName);
+  const bundledAppFileSet = new Set(bundledAppFiles);
+  const publicAppFiles = allAppFiles.filter(
+    (file) => !bundledAppFileSet.has(file),
+  );
+
+  const staticRoutesFile = join(config.serverOutDir, "static.json");
+  let staticRoutes = [
+    ...Array.from(bundledAppFiles)
+      .filter((path) => path !== "index.html")
+      .map((path) => [`/${path}`, { cacheable: true, path: `public/${path}` }]),
+    ...publicAppFiles
+      .filter((path) => path !== "index.html")
+      .map((path) => [
+        `/${path}`,
+        { cacheable: false, path: `public/${path}` },
+      ]),
+  ];
+  await writeFile(
+    staticRoutesFile,
+    JSON.stringify(Object.fromEntries(staticRoutes)),
+  );
 
   console.log();
 
@@ -39,8 +68,6 @@ export async function build(config: ResolvedConfig) {
     entrypoints: [config.serverEntry],
     target: "bun",
     define: {
-      // In production, the public directory is inside the CWD
-      "import.meta.publicDir": `"public"`,
       "import.meta.command": `"build"`,
     },
     plugins: [aframeServerMainBunPlugin(config)],
@@ -65,16 +92,26 @@ export async function build(config: ResolvedConfig) {
     console.log(`${DIM}${BOLD}→${RESET} Pre-rendering disabled`);
   }
 
+  staticRoutes = staticRoutes.concat(
+    prerendered.map((entry) => [
+      entry.route,
+      { cacheable: false, path: `prerendered/${entry.relativePath}` },
+    ]),
+  );
+  await writeFile(
+    staticRoutesFile,
+    JSON.stringify(Object.fromEntries(staticRoutes)),
+  );
+
   console.log();
 
   console.log(`${GREEN}✔${RESET} Application built in ${buildTimer()}`);
   const relativeOutDir = `${relative(config.rootDir, config.outDir)}/`;
   const files = [
     ...server.outputs.map((output) => output.path),
-    ...prerendered.map((output) => output.file),
-    ...app
-      .filter((output) => output.fileName !== "index.html")
-      .map((output) => join(config.appOutDir, output.fileName)),
+    ...prerendered.map((output) => output.absolutePath),
+    ...allAppFiles.map((file) => join(config.appOutDir, file)),
+    staticRoutesFile,
   ].map((file): [file: string, size: number] => [
     relative(config.outDir, file),
     lstatSync(file).size,
