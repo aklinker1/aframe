@@ -1,6 +1,5 @@
 import * as vite from "vite";
 import { resolve, join, relative } from "node:path/posix";
-import { mkdir } from "node:fs/promises";
 import type { LaunchOptions } from "puppeteer";
 
 export type UserConfig = {

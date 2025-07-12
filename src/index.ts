@@ -67,7 +67,7 @@ export async function build(config: ResolvedConfig) {
   console.log(
     `${BOLD}${CYAN}ℹ${RESET} Building ${CYAN}./server${RESET} with ${MAGENTA}Bun ${Bun.version}${RESET}`,
   );
-  const server = await Bun.build({
+  await Bun.build({
     outdir: config.serverOutDir,
     sourcemap: "external",
     entrypoints: [config.serverEntry],
