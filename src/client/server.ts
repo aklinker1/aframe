@@ -2,10 +2,6 @@ import type { BunFile } from "bun";
 import { readFileSync } from "node:fs";
 import { join, extname, basename } from "node:path";
 
-const cacheHeaders = {
-  "Cache-Control": "max-age=31536000",
-};
-
 export interface AframeServer {
   listen(port: number): void | never;
 }
@@ -35,12 +31,17 @@ export function fetchStatic(options?: {
     if (staticPaths[path]) {
       const filePath = join(import.meta.dir, staticPaths[path].path);
       const file = Bun.file(filePath);
+      const gzFile = Bun.file(filePath + ".gz");
 
       const customResponse = await options?.onFetch?.(path, file);
       if (customResponse) return customResponse;
 
-      return new Response(file, {
-        headers: staticPaths[path].cacheable ? cacheHeaders : {},
+      return new Response(gzFile.stream(), {
+        headers: {
+          "Content-Type": file.type,
+          "Content-Encoding": "gzip",
+          "Cache-Control": "max-age=31536000",
+        },
       });
     }
 
@@ -50,10 +51,18 @@ export function fetchStatic(options?: {
     }
 
     // Fallback to public/index.html file
+    if (import.meta.command === "build") {
+      const file = Bun.file(join(publicDir, "index.html"));
+      const gzFile = Bun.file(join(publicDir, "index.html.gz"));
+      return new Response(gzFile.stream(), {
+        headers: {
+          "Content-Type": file.type,
+          "Content-Encoding": "gzip",
+        },
+      });
+    }
     return new Response(
-      import.meta.command === "build"
-        ? Bun.file(join(publicDir, "index.html"))
-        : `<html>
+      `<html>
   <body>
     This is a placeholder for your root <code>index.html</code> file during development.
     <br/>

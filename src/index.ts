@@ -1,5 +1,5 @@
 import type { BunPlugin } from "bun";
-import { lstatSync } from "node:fs";
+import { createReadStream, createWriteStream, lstatSync } from "node:fs";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
@@ -7,6 +7,8 @@ import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
 import type { ResolvedConfig } from "./config";
 import { createTimer } from "./timer";
 import { prerenderPages, type PrerenderedRoute } from "./prerenderer";
+import { createGzip } from "node:zlib";
+import { pipeline } from "node:stream/promises";
 
 export * from "./config";
 export * from "./dev-server";
@@ -25,19 +27,22 @@ export async function build(config: ResolvedConfig) {
   const appOutput = (await vite.build(config.vite)) as vite.Rollup.RollupOutput;
   console.log(`${GREEN}✔${RESET} Built in ${appTimer()}`);
 
-  const allAppFiles = (
+  const allAbsoluteAppFiles = (
     await readdir(config.appOutDir, { recursive: true, withFileTypes: true })
   )
     .filter((entry) => entry.isFile())
-    .map((entry) =>
-      relative(config.appOutDir, join(entry.parentPath, entry.name)),
-    );
+    .map((entry) => join(entry.parentPath, entry.name));
+  const allAppFiles = allAbsoluteAppFiles.map((path) =>
+    relative(config.appOutDir, path),
+  );
 
   const bundledAppFiles = appOutput.output.map((entry) => entry.fileName);
   const bundledAppFileSet = new Set(bundledAppFiles);
   const publicAppFiles = allAppFiles.filter(
     (file) => !bundledAppFileSet.has(file),
   );
+
+  await gzipFiles(config, allAbsoluteAppFiles);
 
   const staticRoutesFile = join(config.serverOutDir, "static.json");
   let staticRoutes = [
@@ -92,6 +97,11 @@ export async function build(config: ResolvedConfig) {
     console.log(`${DIM}${BOLD}→${RESET} Pre-rendering disabled`);
   }
 
+  await gzipFiles(
+    config,
+    prerendered.map((entry) => entry.absolutePath),
+  );
+
   staticRoutes = staticRoutes.concat(
     prerendered.map((entry) => [
       entry.route,
@@ -107,15 +117,16 @@ export async function build(config: ResolvedConfig) {
 
   console.log(`${GREEN}✔${RESET} Application built in ${buildTimer()}`);
   const relativeOutDir = `${relative(config.rootDir, config.outDir)}/`;
-  const files = [
-    ...server.outputs.map((output) => output.path),
-    ...prerendered.map((output) => output.absolutePath),
-    ...allAppFiles.map((file) => join(config.appOutDir, file)),
-    staticRoutesFile,
-  ].map((file): [file: string, size: number] => [
-    relative(config.outDir, file),
-    lstatSync(file).size,
-  ]);
+  const files = (
+    await readdir(config.outDir, { recursive: true, withFileTypes: true })
+  )
+    .filter((entry) => entry.isFile())
+    .map((entry) => join(entry.parentPath, entry.name))
+    .toSorted()
+    .map((file): [file: string, size: number] => [
+      relative(config.outDir, file),
+      lstatSync(file).size,
+    ]);
   const fileColumnCount = files.reduce(
     (max, [file]) => Math.max(file.length, max),
     0,
@@ -161,4 +172,20 @@ function prettyBytes(bytes: number) {
   const unit = units[exponent];
   const value = bytes / Math.pow(base, exponent);
   return `${unit === "B" ? value : value.toFixed(2)} ${unit}`;
+}
+
+async function gzipFiles(
+  config: ResolvedConfig,
+  files: string[],
+): Promise<void> {
+  for (const file of files) await gzipFile(config, file);
+}
+
+async function gzipFile(config: ResolvedConfig, file: string): Promise<void> {
+  await writeFile(`${file}.gz`, "");
+  await pipeline(
+    createReadStream(file),
+    createGzip(),
+    createWriteStream(`${file}.gz`),
+  );
 }
