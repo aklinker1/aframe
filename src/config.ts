@@ -1,6 +1,5 @@
 import * as vite from "vite";
 import { resolve, join, relative } from "node:path/posix";
-import { mkdir } from "node:fs/promises";
 import type { LaunchOptions } from "puppeteer";
 
 export type UserConfig = {
@@ -39,7 +38,7 @@ export type ResolvedConfig = {
   serverDir: string;
   serverModule: string;
   serverEntry: string;
-  prerenderToDir: string;
+  prerenderedDir: string;
   proxyPaths: string[];
   outDir: string;
   serverOutDir: string;
@@ -69,10 +68,7 @@ export async function resolveConfig(
   const outDir = join(rootDir, ".output");
   const appOutDir = join(outDir, "public");
   const serverOutDir = outDir;
-  const prerenderToDir = appOutDir;
-
-  // Ensure required directories exist
-  await mkdir(prerenderToDir, { recursive: true });
+  const prerenderedDir = join(outDir, "prerendered");
 
   const configFile = join(rootDir, "aframe.config"); // No file extension to resolve any JS/TS file
   const relativeConfigFile = "./" + relative(import.meta.dir, configFile);
@@ -120,6 +116,7 @@ export async function resolveConfig(
       publicDir,
       envDir: rootDir,
       build: {
+        emptyOutDir: false,
         outDir: appOutDir,
       },
       server: {
@@ -140,7 +137,7 @@ export async function resolveConfig(
     outDir,
     serverOutDir,
     appOutDir,
-    prerenderToDir,
+    prerenderedDir,
     appPort,
     serverPort,
     proxyPaths,

@@ -1,15 +1,18 @@
 import type { BunFile } from "bun";
-import { resolve } from "node:path";
-
-const headers = {
-  "Cache-Control": "max-age=31536000",
-};
+import { readFileSync } from "node:fs";
+import { join, extname, basename } from "node:path";
 
 export interface AframeServer {
   listen(port: number): void | never;
 }
 
-const publicDir = resolve(import.meta.dir, import.meta.publicDir);
+const staticPathsFile = join(import.meta.dir, "static.json");
+const publicDir = join(import.meta.dir, "public");
+
+let staticPaths: Record<string, { cacheable: boolean; path: string }> = {};
+try {
+  staticPaths = JSON.parse(readFileSync(staticPathsFile, "utf-8"));
+} catch {}
 
 /**
  * Fetches a file from the `public` directory.
@@ -22,48 +25,50 @@ export function fetchStatic(options?: {
   ) => Promise<Response | undefined> | Response | undefined;
 }): (request: Request) => Promise<Response> {
   return async (request) => {
-    const path = new URL(request.url).pathname.replace(/\/+$/, "");
+    const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
 
-    const paths = [`${publicDir}${path}`, `${publicDir}${path}/index.html`];
+    // Fetch file on disk
+    if (staticPaths[path]) {
+      const filePath = join(import.meta.dir, staticPaths[path].path);
+      const file = Bun.file(filePath);
+      const gzFile = Bun.file(filePath + ".gz");
 
-    // Only fallback on the root HTML file when building application
+      const customResponse = await options?.onFetch?.(path, file);
+      if (customResponse) return customResponse;
+
+      return new Response(gzFile.stream(), {
+        headers: {
+          "Content-Type": file.type,
+          "Content-Encoding": "gzip",
+          "Cache-Control": "max-age=31536000",
+        },
+      });
+    }
+
+    const ext = extname(basename(path));
+    if (ext) {
+      return new Response(undefined, { status: 404 });
+    }
+
+    // Fallback to public/index.html file
     if (import.meta.command === "build") {
-      paths.push(`${publicDir}/index.html`);
+      const file = Bun.file(join(publicDir, "index.html"));
+      const gzFile = Bun.file(join(publicDir, "index.html.gz"));
+      return new Response(gzFile.stream(), {
+        headers: {
+          "Content-Type": file.type,
+          "Content-Encoding": "gzip",
+        },
+      });
     }
-
-    for (const path of paths) {
-      const isHtml = path.includes(".html");
-      const gzFile = Bun.file(path + ".gz");
-      const file = Bun.file(path);
-
-      if (await isFile(gzFile)) {
-        const customResponse = await options?.onFetch?.(path, file);
-        if (customResponse) return customResponse;
-        return new Response(gzFile.stream(), {
-          headers: {
-            ...(isHtml ? {} : headers),
-            "content-type": file.type,
-            "content-encoding": "gzip",
-          },
-        });
-      }
-
-      if (await isFile(file)) {
-        const customResponse = await options?.onFetch?.(path, file);
-        if (customResponse) return customResponse;
-
-        return new Response(file.stream(), { headers });
-      }
-    }
-
     return new Response(
       `<html>
-        <body>
-          This is a placeholder for your root <code>index.html</code> file during development.
-          <br/>
-          In production (or via the app's dev server), this path will fallback on the root <code>index.html</code>.
-        </body>
-      </html>`,
+  <body>
+    This is a placeholder for your root <code>index.html</code> file during development.
+    <br/>
+    In production (or via the app's dev server), this path will fallback on the root <code>index.html</code>.
+  </body>
+</html>`,
       {
         headers: {
           "Content-Type": "text/html",
@@ -71,13 +76,4 @@ export function fetchStatic(options?: {
       },
     );
   };
-}
-
-async function isFile(file: BunFile): Promise<boolean> {
-  try {
-    const stats = await file.stat();
-    return stats.isFile();
-  } catch {
-    return false;
-  }
 }
