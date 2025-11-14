@@ -60,20 +60,21 @@ export function fetchStatic(options?: {
           "Content-Encoding": "gzip",
         },
       });
-    }
-    return new Response(
-      `<html>
+    } else {
+      return new Response(
+        `<html>
   <body>
     This is a placeholder for your root <code>index.html</code> file during development.
     <br/>
     In production (or via the app's dev server), this path will fallback on the root <code>index.html</code>.
   </body>
 </html>`,
-      {
-        headers: {
-          "Content-Type": "text/html",
+        {
+          headers: {
+            "Content-Type": "text/html",
+          },
         },
-      },
-    );
+      );
+    }
   };
 }
