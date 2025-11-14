@@ -13,7 +13,7 @@ export type PrerenderedRoute = {
 export async function prerenderPages(
   config: ResolvedConfig,
 ): Promise<PrerenderedRoute[]> {
-  if (config.prerenderer === false) return [];
+  if (config.prerender === false) return [];
 
   const puppeteer = await import("puppeteer");
   const {
@@ -22,7 +22,7 @@ export async function prerenderPages(
     waitForSelector,
     waitForSelectorVisible,
     waitForTimeout,
-  } = config.prerenderer ?? {};
+  } = config.prerender ?? {};
 
   const server = Bun.spawn({
     cmd: ["bun", join(config.serverOutDir, "server-entry.js")],
