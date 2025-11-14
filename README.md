@@ -28,8 +28,8 @@ export default defineConfig({
   },
   // List of routes to pre-render.
   prerenderedRoutes: ["/"],
-  // See https://github.com/Tofandel/prerenderer?tab=readme-ov-file#prerenderer-options
-  prerenderer: {
+  // Configure how prerendering works, or set to `false` to disable
+  prerender: {
     // ...
   },
 });

@@ -6,7 +6,7 @@ import * as vite from "vite";
 import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
 import type { ResolvedConfig } from "./config";
 import { createTimer } from "./timer";
-import { prerenderPages, type PrerenderedRoute } from "./prerenderer";
+import { prerenderPages, type PrerenderedRoute } from "./prerender";
 import { createGzip } from "node:zlib";
 import { pipeline } from "node:stream/promises";
 
@@ -83,7 +83,7 @@ export async function build(config: ResolvedConfig) {
   console.log();
 
   let prerendered: PrerenderedRoute[] = [];
-  if (config.prerenderer !== false) {
+  if (config.prerender !== false) {
     const prerenderTimer = createTimer();
     console.log(
       `${BOLD}${CYAN}ℹ${RESET} Prerendering...\n` +
@@ -94,7 +94,7 @@ export async function build(config: ResolvedConfig) {
     prerendered = await prerenderPages(config);
     console.log(`${GREEN}✔${RESET} Prerendered in ${prerenderTimer()}`);
   } else {
-    console.log(`${DIM}${BOLD}→${RESET} Pre-rendering disabled`);
+    console.log(`${DIM}${BOLD}→${RESET} Pre-render disabled`);
   }
 
   await gzipFiles(

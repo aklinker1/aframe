@@ -10,12 +10,12 @@ export type UserConfig = {
    */
   proxyPaths?: string[];
   prerenderedRoutes?: string[];
-  prerenderer?: PrerendererConfig | false;
+  prerender?: PrerenderConfig | false;
   appPort?: number;
   serverPort?: number;
 };
 
-export type PrerendererConfig = {
+export type PrerenderConfig = {
   /** Wait for an selector`document.querySelector` to be in the DOM before grabbing the HTML. */
   waitForSelector?: string;
   /** When `waitForSelector` is set, also wait for the element to be visible before grabbing the HTML. */
@@ -47,7 +47,7 @@ export type ResolvedConfig = {
   serverPort: number;
   vite: vite.InlineConfig;
   prerenderedRoutes: string[];
-  prerenderer: PrerendererConfig | false;
+  prerender: PrerenderConfig | false;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -144,6 +144,6 @@ export async function resolveConfig(
 
     prerenderedRoutes: userConfig.prerenderedRoutes ?? ["/"],
     vite: viteConfig,
-    prerenderer: userConfig.prerenderer ?? {},
+    prerender: userConfig.prerender ?? {},
   };
 }
