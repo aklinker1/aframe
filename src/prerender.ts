@@ -1,4 +1,3 @@
-import {} from "node:url";
 import { dirname, join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import type { Browser } from "puppeteer";
