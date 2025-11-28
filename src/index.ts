@@ -1,9 +1,4 @@
-import {
-  createReadStream,
-  createWriteStream,
-  Dirent,
-  lstatSync,
-} from "node:fs";
+import { createReadStream, createWriteStream, lstatSync } from "node:fs";
 import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
