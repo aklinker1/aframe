@@ -16,17 +16,13 @@ export async function createServer(
       `server.listen(${config.serverPort});`,
     ].join("\n");
     return Bun.spawn({
-      cmd: [
-        "bun",
-        "--watch",
-        "--define",
-        `import.meta.publicDir:"${config.publicDir}"`,
-        "--define",
-        `import.meta.command:"serve"`,
-        "--eval",
-        js,
-      ],
+      cmd: ["bun", "--watch", "--eval", js],
       stdio: ["inherit", "inherit", "inherit"],
+      env: {
+        ...process.env,
+        AFRAME_COMMAND: "serve",
+        AFRAME_PUBLIC_DIR: config.publicDir,
+      },
       cwd: config.rootDir,
     });
   };

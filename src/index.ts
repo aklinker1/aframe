@@ -1,9 +1,8 @@
-import type { BunPlugin } from "bun";
 import { createReadStream, createWriteStream, lstatSync } from "node:fs";
-import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
-import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET } from "./color";
+import { BLUE, BOLD, CYAN, DIM, GREEN, MAGENTA, RESET, YELLOW } from "./color";
 import type { ResolvedConfig } from "./config";
 import { createTimer } from "./timer";
 import { prerenderPages, type PrerenderedRoute } from "./prerender";
@@ -44,7 +43,7 @@ export async function build(config: ResolvedConfig) {
 
   await gzipFiles(config, allAbsoluteAppFiles);
 
-  const staticRoutesFile = join(config.serverOutDir, "static.json");
+  const staticRoutesFile = join(config.outDir, "static.json");
   let staticRoutes = [
     ...Array.from(bundledAppFiles)
       .filter((path) => path !== "index.html")
@@ -64,20 +63,52 @@ export async function build(config: ResolvedConfig) {
   console.log();
 
   const serverTimer = createTimer();
-  console.log(
-    `${BOLD}${CYAN}ℹ${RESET} Building ${CYAN}./server${RESET} with ${MAGENTA}Bun ${Bun.version}${RESET}`,
-  );
-  await Bun.build({
-    outdir: config.serverOutDir,
-    sourcemap: "external",
-    entrypoints: [config.serverEntry],
-    target: "bun",
-    define: {
-      "import.meta.command": `"build"`,
-    },
-    plugins: [aframeServerMainBunPlugin(config)],
-    throw: true,
+  console.log(`${BOLD}${CYAN}ℹ${RESET} Building ${CYAN}./server${RESET}`);
+  await cp(config.serverDir, config.serverOutDir, {
+    recursive: true,
+    filter: (src) =>
+      !src.includes("__tests__") &&
+      !src.includes(".test.") &&
+      !src.includes(".spec."),
   });
+  await Promise.all(
+    ["bun.lock", "bun.lockb", "tsconfig.json"].map((file) =>
+      cp(join(config.rootDir, file), join(config.outDir, file)).catch(() => {
+        // Ignore errors
+      }),
+    ),
+  );
+  const packageJson = await Bun.file(config.packageJsonPath)
+    .json()
+    .catch(() => ({}));
+  await Bun.write(
+    join(config.outDir, "package.json"),
+    JSON.stringify(
+      {
+        dependencies: packageJson.dependencies,
+        devDependencies: packageJson.devDependencies,
+      },
+      null,
+      2,
+    ),
+  );
+  await Bun.write(
+    join(config.outDir, "server-entry.ts"),
+    `import server from "./server/main";
+
+const port = Number(process.env.PORT) || 3000;
+console.log(\`Server running @ http://localhost:\${port}\`);
+server.listen(port);
+`,
+  );
+  const installProc = Bun.spawn(["bun", "i", "--production"], {
+    cwd: config.outDir,
+  });
+  const installStatus = await installProc.exited;
+  if (installStatus !== 0) {
+    throw new Error(`Failed to run "bun i --production" in ${config.outDir}`);
+  }
+
   console.log(`${GREEN}✔${RESET} Built in ${serverTimer()}`);
 
   console.log();
@@ -144,19 +175,10 @@ export async function build(config: ResolvedConfig) {
   console.log();
 }
 
-function aframeServerMainBunPlugin(config: ResolvedConfig): BunPlugin {
-  return {
-    name: "aframe:resolve-server-main",
-    setup(bun) {
-      bun.onResolve({ filter: /^aframe:server-main$/ }, () => ({
-        path: config.serverModule,
-      }));
-    },
-  };
-}
-
 function getColor(file: string) {
   if (file.endsWith(".js")) return CYAN;
+  if (file.endsWith(".ts")) return CYAN;
+  if (file.endsWith(".json")) return YELLOW;
   if (file.endsWith(".html")) return GREEN;
   if (file.endsWith(".css")) return MAGENTA;
   if (file.endsWith(".map")) return DIM;

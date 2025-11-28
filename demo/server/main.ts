@@ -1,4 +1,5 @@
-import { fetchStatic, type AframeServer } from "../../src/client/server";
+import { fetchStatic, type AframeServer } from "@aklinker1/aframe/server";
+import {} from "oxlint";
 
 console.log("process.env.EXAMPLE:", process.env.EXAMPLE);
 

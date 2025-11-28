@@ -33,11 +33,11 @@ export type PrerenderConfig = {
 
 export type ResolvedConfig = {
   rootDir: string;
+  packageJsonPath: string;
   appDir: string;
   publicDir: string;
   serverDir: string;
   serverModule: string;
-  serverEntry: string;
   prerenderedDir: string;
   proxyPaths: string[];
   outDir: string;
@@ -60,14 +60,14 @@ export async function resolveConfig(
   mode: string,
 ): Promise<ResolvedConfig> {
   const rootDir = root ? resolve(root) : process.cwd();
+  const packageJsonPath = join(rootDir, "package.json");
   const appDir = join(rootDir, "app");
   const serverDir = join(rootDir, "server");
   const serverModule = join(serverDir, "main.ts");
-  const serverEntry = join(import.meta.dir, "server-entry.ts");
   const publicDir = join(rootDir, "public");
   const outDir = join(rootDir, ".output");
   const appOutDir = join(outDir, "public");
-  const serverOutDir = outDir;
+  const serverOutDir = join(outDir, "server");
   const prerenderedDir = join(outDir, "prerendered");
 
   const configFile = join(rootDir, "aframe.config"); // No file extension to resolve any JS/TS file
@@ -129,11 +129,11 @@ export async function resolveConfig(
 
   return {
     rootDir,
+    packageJsonPath,
     appDir,
     publicDir,
     serverDir,
     serverModule,
-    serverEntry,
     outDir,
     serverOutDir,
     appOutDir,

@@ -6,8 +6,8 @@ export interface AframeServer {
   listen(port: number): void | never;
 }
 
-const staticPathsFile = join(import.meta.dir, "static.json");
-const publicDir = join(import.meta.dir, "public");
+const staticPathsFile = "static.json";
+const publicDir = process.env.AFRAME_PUBLIC_DIR || "public";
 
 let staticPaths: Record<string, { cacheable: boolean; path: string }> = {};
 try {
@@ -29,7 +29,7 @@ export function fetchStatic(options?: {
 
     // Fetch file on disk
     if (staticPaths[path]) {
-      const filePath = join(import.meta.dir, staticPaths[path].path);
+      const filePath = staticPaths[path].path;
       const file = Bun.file(filePath);
       const gzFile = Bun.file(filePath + ".gz");
 
@@ -50,17 +50,8 @@ export function fetchStatic(options?: {
       return new Response(undefined, { status: 404 });
     }
 
-    // Fallback to public/index.html file
-    if (import.meta.command === "build") {
-      const file = Bun.file(join(publicDir, "index.html"));
-      const gzFile = Bun.file(join(publicDir, "index.html.gz"));
-      return new Response(gzFile.stream(), {
-        headers: {
-          "Content-Type": file.type,
-          "Content-Encoding": "gzip",
-        },
-      });
-    } else {
+    // Fallback to public/index.html file during development
+    if (process.env.AFRAME_COMMAND === "serve") {
       return new Response(
         `<html>
   <body>
@@ -76,5 +67,14 @@ export function fetchStatic(options?: {
         },
       );
     }
+
+    const file = Bun.file(join(publicDir, "index.html"));
+    const gzFile = Bun.file(join(publicDir, "index.html.gz"));
+    return new Response(gzFile.stream(), {
+      headers: {
+        "Content-Type": file.type,
+        "Content-Encoding": "gzip",
+      },
+    });
   };
 }
