@@ -24,9 +24,6 @@ server.listen(${config.serverPort});
     return Bun.spawn({
       cmd: ["bun", "--watch", "--eval", js],
       stdio: ["inherit", "inherit", "inherit"],
-      env: {
-        ...process.env,
-      },
       cwd: config.rootDir,
     });
   };
