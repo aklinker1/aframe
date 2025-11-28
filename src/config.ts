@@ -2,6 +2,10 @@ import * as vite from "vite";
 import { resolve, join, relative } from "node:path/posix";
 import type { LaunchOptions } from "puppeteer";
 
+export type AframeHooks = {
+  afterServerBuild?: (config: ResolvedConfig) => Promise<void> | void;
+};
+
 export type UserConfig = {
   vite?: vite.UserConfigExport;
   /**
@@ -13,6 +17,7 @@ export type UserConfig = {
   prerender?: PrerenderConfig | false;
   appPort?: number;
   serverPort?: number;
+  hooks?: AframeHooks;
 };
 
 export type PrerenderConfig = {
@@ -48,6 +53,7 @@ export type ResolvedConfig = {
   vite: vite.InlineConfig;
   prerenderedRoutes: string[];
   prerender: PrerenderConfig | false;
+  hooks: AframeHooks | undefined;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -145,5 +151,6 @@ export async function resolveConfig(
     prerenderedRoutes: userConfig.prerenderedRoutes ?? ["/"],
     vite: viteConfig,
     prerender: userConfig.prerender ?? {},
+    hooks: userConfig.hooks,
   };
 }

@@ -24,7 +24,7 @@ export async function prerenderPages(
   } = config.prerender ?? {};
 
   const server = Bun.spawn({
-    cmd: ["bun", join(config.serverOutDir, "server-entry.js")],
+    cmd: ["bun", join(config.outDir, "server-entry.ts")],
     cwd: config.rootDir,
     stdio: ["inherit", "inherit", "inherit"],
   });

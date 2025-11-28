@@ -1,4 +1,9 @@
-import { createReadStream, createWriteStream, lstatSync } from "node:fs";
+import {
+  createReadStream,
+  createWriteStream,
+  Dirent,
+  lstatSync,
+} from "node:fs";
 import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
@@ -64,51 +69,7 @@ export async function build(config: ResolvedConfig) {
 
   const serverTimer = createTimer();
   console.log(`${BOLD}${CYAN}ℹ${RESET} Building ${CYAN}./server${RESET}`);
-  await cp(config.serverDir, config.serverOutDir, {
-    recursive: true,
-    filter: (src) =>
-      !src.includes("__tests__") &&
-      !src.includes(".test.") &&
-      !src.includes(".spec."),
-  });
-  await Promise.all(
-    ["bun.lock", "bun.lockb", "tsconfig.json"].map((file) =>
-      cp(join(config.rootDir, file), join(config.outDir, file)).catch(() => {
-        // Ignore errors
-      }),
-    ),
-  );
-  const packageJson = await Bun.file(config.packageJsonPath)
-    .json()
-    .catch(() => ({}));
-  await Bun.write(
-    join(config.outDir, "package.json"),
-    JSON.stringify(
-      {
-        dependencies: packageJson.dependencies,
-        devDependencies: packageJson.devDependencies,
-      },
-      null,
-      2,
-    ),
-  );
-  await Bun.write(
-    join(config.outDir, "server-entry.ts"),
-    `import server from "./server/main";
-
-const port = Number(process.env.PORT) || 3000;
-console.log(\`Server running @ http://localhost:\${port}\`);
-server.listen(port);
-`,
-  );
-  const installProc = Bun.spawn(["bun", "i", "--production"], {
-    cwd: config.outDir,
-  });
-  const installStatus = await installProc.exited;
-  if (installStatus !== 0) {
-    throw new Error(`Failed to run "bun i --production" in ${config.outDir}`);
-  }
-
+  await buildServer(config);
   console.log(`${GREEN}✔${RESET} Built in ${serverTimer()}`);
 
   console.log();
@@ -149,10 +110,8 @@ server.listen(port);
   console.log(`${GREEN}✔${RESET} Application built in ${buildTimer()}`);
   const relativeOutDir = `${relative(config.rootDir, config.outDir)}/`;
   const files = (
-    await readdir(config.outDir, { recursive: true, withFileTypes: true })
+    await listDirFiles(config.outDir, (path) => !path.includes("node_modules"))
   )
-    .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name))
     .toSorted()
     .map((file): [file: string, size: number] => [
       relative(config.outDir, file),
@@ -173,6 +132,73 @@ server.listen(port);
   );
   console.log(`${CYAN}Σ Total size:${RESET} ${prettyBytes(totalSize)}`);
   console.log();
+
+  console.log(
+    `To preview production build, run:
+
+    ${CYAN}bun run .output/server-entry.ts${RESET}`,
+  );
+}
+
+async function buildServer(config: ResolvedConfig): Promise<void> {
+  await cp(config.serverDir, config.serverOutDir, {
+    recursive: true,
+    filter: (src) =>
+      !src.includes("__tests__") &&
+      !src.includes(".test.") &&
+      !src.includes(".spec."),
+  });
+  await Promise.all(
+    ["bun.lock", "bun.lockb", "tsconfig.json"].map((file) =>
+      cp(join(config.rootDir, file), join(config.outDir, file)).catch(() => {
+        // Ignore errors
+      }),
+    ),
+  );
+  const packageJson = await Bun.file(config.packageJsonPath)
+    .json()
+    .catch(() => ({}));
+  await Bun.write(
+    join(config.outDir, "package.json"),
+    JSON.stringify(
+      {
+        dependencies: packageJson.dependencies,
+        devDependencies: packageJson.devDependencies,
+      },
+      null,
+      2,
+    ),
+  );
+  await Bun.write(
+    join(config.outDir, "server-entry.ts"),
+    `import { resolve } from 'node:path';
+
+globalThis.aframe = {
+  command: "build",
+  rootDir: import.meta.dir,
+  publicDir: resolve(import.meta.dir, "public"),
+};
+console.log({ aframe });
+
+const { default: server } = await import("./server/main");
+
+const port = Number(process.env.PORT) || 3000;
+console.log(\`Server running @ http://localhost:\${port}\`);
+server.listen(port);
+`,
+  );
+  const installProc = Bun.spawn(
+    ["bun", "i", "--production", "--frozen-lockfile"],
+    {
+      cwd: config.outDir,
+    },
+  );
+  const installStatus = await installProc.exited;
+  if (installStatus !== 0) {
+    throw new Error(`Failed to run "bun i --production" in ${config.outDir}`);
+  }
+
+  await config.hooks?.afterServerBuild?.(config);
 }
 
 function getColor(file: string) {
@@ -210,4 +236,29 @@ async function gzipFile(config: ResolvedConfig, file: string): Promise<void> {
     createGzip(),
     createWriteStream(`${file}.gz`),
   );
+}
+
+async function listDirFiles(
+  dir: string,
+  filter: (path: string) => boolean,
+): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = join(entry.parentPath, entry.name);
+
+    if (!filter(fullPath)) {
+      continue;
+    }
+
+    if (entry.isFile()) {
+      files.push(fullPath);
+    } else if (entry.isDirectory()) {
+      const subFiles = await listDirFiles(fullPath, filter);
+      files.push(...subFiles);
+    }
+  }
+
+  return files;
 }

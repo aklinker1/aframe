@@ -1,6 +1,18 @@
 import { defineConfig } from "../src";
+import { join } from "node:path";
 
 export default defineConfig({
-  prerender: false,
-  // prerenderedRoutes: ["/", "/two"],
+  prerenderedRoutes: ["/", "/two"],
+  hooks: {
+    afterServerBuild: async (config) => {
+      // Update tsconfig path alias
+      const file = Bun.file(join(config.outDir, "tsconfig.json"));
+      const text = await file.text();
+      const fixedText = text.replace(
+        `"../src/client/server"`,
+        `"../../src/client/server"`,
+      );
+      await file.write(fixedText);
+    },
+  },
 });

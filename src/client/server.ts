@@ -6,8 +6,8 @@ export interface AframeServer {
   listen(port: number): void | never;
 }
 
-const staticPathsFile = "static.json";
-const publicDir = process.env.AFRAME_PUBLIC_DIR || "public";
+const staticPathsFile = join(aframe.rootDir, "static.json");
+const publicDir = aframe.publicDir;
 
 let staticPaths: Record<string, { cacheable: boolean; path: string }> = {};
 try {
@@ -29,7 +29,7 @@ export function fetchStatic(options?: {
 
     // Fetch file on disk
     if (staticPaths[path]) {
-      const filePath = staticPaths[path].path;
+      const filePath = join(aframe.rootDir, staticPaths[path].path);
       const file = Bun.file(filePath);
       const gzFile = Bun.file(filePath + ".gz");
 
@@ -54,7 +54,7 @@ export function fetchStatic(options?: {
 
     // During development, render a fallback HTML page since Vite should handle
     // all these routes before proxying the request to the server.
-    if (process.env.AFRAME_COMMAND === "serve") {
+    if (aframe.command === "serve") {
       return new Response(
         `<html>
   <body>
