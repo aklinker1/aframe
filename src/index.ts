@@ -178,7 +178,6 @@ globalThis.aframe = {
   rootDir: import.meta.dir,
   publicDir: resolve(import.meta.dir, "public"),
 };
-console.log({ aframe });
 
 const { default: server } = await import("./server/main");
 

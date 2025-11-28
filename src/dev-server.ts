@@ -16,7 +16,6 @@ export async function createServer(
   rootDir: "${config.rootDir}",
   publicDir: "${config.publicDir}",
 };
-console.log({ aframe });
 
 const { default: server } = await import('${config.serverModule}');
 
