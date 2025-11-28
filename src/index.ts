@@ -248,9 +248,7 @@ async function listDirFiles(
   for (const entry of entries) {
     const fullPath = join(entry.parentPath, entry.name);
 
-    if (!filter(fullPath)) {
-      continue;
-    }
+    if (!filter(fullPath)) continue;
 
     if (entry.isFile()) {
       files.push(fullPath);
