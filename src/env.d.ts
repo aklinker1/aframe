@@ -1,9 +1,11 @@
 import "vite/client";
 
 declare global {
-  interface ImportMeta {
-    command: string;
-  }
+  declare var aframe: {
+    command: "build" | "serve";
+    rootDir: string;
+    publicDir: string;
+  };
 }
 
 export {};

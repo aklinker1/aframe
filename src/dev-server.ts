@@ -11,21 +11,18 @@ export async function createServer(
 
   let serverProcess: Subprocess | undefined;
   const startServer = () => {
-    const js = [
-      `import server from '${config.serverModule}';`,
-      `server.listen(${config.serverPort});`,
-    ].join("\n");
+    const js = `globalThis.aframe = {
+  command: "serve",
+  rootDir: "${config.rootDir}",
+  publicDir: "${config.publicDir}",
+};
+
+const { default: server } = await import('${config.serverModule}');
+
+server.listen(${config.serverPort});
+`;
     return Bun.spawn({
-      cmd: [
-        "bun",
-        "--watch",
-        "--define",
-        `import.meta.publicDir:"${config.publicDir}"`,
-        "--define",
-        `import.meta.command:"serve"`,
-        "--eval",
-        js,
-      ],
+      cmd: ["bun", "--watch", "--eval", js],
       stdio: ["inherit", "inherit", "inherit"],
       cwd: config.rootDir,
     });
