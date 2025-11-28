@@ -45,12 +45,15 @@ export function fetchStatic(options?: {
       });
     }
 
+    // If the path is asking for a file (e.g., it has an extension), return a
+    // 404 if it wasn't in the static list
     const ext = extname(basename(path));
     if (ext) {
       return new Response(undefined, { status: 404 });
     }
 
-    // Fallback to public/index.html file during development
+    // During development, render a fallback HTML page since Vite should handle
+    // all these routes before proxying the request to the server.
     if (process.env.AFRAME_COMMAND === "serve") {
       return new Response(
         `<html>
@@ -68,6 +71,7 @@ export function fetchStatic(options?: {
       );
     }
 
+    // Fallback to public/index.html file
     const file = Bun.file(join(publicDir, "index.html"));
     const gzFile = Bun.file(join(publicDir, "index.html.gz"));
     return new Response(gzFile.stream(), {
