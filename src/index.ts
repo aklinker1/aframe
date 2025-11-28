@@ -135,8 +135,8 @@ export async function build(config: ResolvedConfig) {
 
   console.log(
     `To preview production build, run:
-
-    ${CYAN}bun run .output/server-entry.ts${RESET}`,
+    ${CYAN}bun run ${relative(process.cwd(), config.outDir)}/server-entry.ts${RESET}
+`,
   );
 }
 
