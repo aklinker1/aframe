@@ -15,7 +15,7 @@ console.log(
   `${DIM}Next version:${RESET} ${BOLD}${GREEN}${nextVersionArg}${RESET}`,
 );
 
-const res = await Bun.$`npm version ${nextVersionArg} -m "chore(release): %s"`;
+const res = await Bun.$`npm version ${nextVersionArg} -m "chore(release): v%s"`;
 const nextTag = res.text().trim();
 const nextVersion = nextTag.slice(1);
 
