@@ -14,10 +14,6 @@ if (!nextVersionArg) throw Error("nextVersion not provided");
 console.log(
   `${DIM}Next version:${RESET} ${BOLD}${GREEN}${nextVersionArg}${RESET}`,
 );
-if (pkg.version.startsWith("0.")) {
-  if (nextVersionArg === "minor") nextVersionArg = "patch";
-  if (nextVersionArg === "major") nextVersionArg = "minor";
-}
 
 const res = await Bun.$`npm version ${nextVersionArg} -m "chore(release): %s"`;
 const nextTag = res.text().trim();
