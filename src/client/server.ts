@@ -6,8 +6,8 @@ export interface AframeServer {
   listen(port: number): void | never;
 }
 
-const staticPathsFile = join(import.meta.dir, "static.json");
-const publicDir = join(import.meta.dir, "public");
+const staticPathsFile = join(aframe.rootDir, "static.json");
+const publicDir = aframe.publicDir;
 
 let staticPaths: Record<string, { cacheable: boolean; path: string }> = {};
 try {
@@ -29,7 +29,7 @@ export function fetchStatic(options?: {
 
     // Fetch file on disk
     if (staticPaths[path]) {
-      const filePath = join(import.meta.dir, staticPaths[path].path);
+      const filePath = join(aframe.rootDir, staticPaths[path].path);
       const file = Bun.file(filePath);
       const gzFile = Bun.file(filePath + ".gz");
 
@@ -45,22 +45,16 @@ export function fetchStatic(options?: {
       });
     }
 
+    // If the path is asking for a file (e.g., it has an extension), return a
+    // 404 if it wasn't in the static list
     const ext = extname(basename(path));
     if (ext) {
       return new Response(undefined, { status: 404 });
     }
 
-    // Fallback to public/index.html file
-    if (import.meta.command === "build") {
-      const file = Bun.file(join(publicDir, "index.html"));
-      const gzFile = Bun.file(join(publicDir, "index.html.gz"));
-      return new Response(gzFile.stream(), {
-        headers: {
-          "Content-Type": file.type,
-          "Content-Encoding": "gzip",
-        },
-      });
-    } else {
+    // During development, render a fallback HTML page since Vite should handle
+    // all these routes before proxying the request to the server.
+    if (aframe.command === "serve") {
       return new Response(
         `<html>
   <body>
@@ -76,5 +70,15 @@ export function fetchStatic(options?: {
         },
       );
     }
+
+    // Fallback to public/index.html file
+    const file = Bun.file(join(publicDir, "index.html"));
+    const gzFile = Bun.file(join(publicDir, "index.html.gz"));
+    return new Response(gzFile.stream(), {
+      headers: {
+        "Content-Type": file.type,
+        "Content-Encoding": "gzip",
+      },
+    });
   };
 }
