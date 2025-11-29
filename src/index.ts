@@ -142,7 +142,7 @@ export async function build(config: ResolvedConfig) {
 }
 
 async function buildServer(config: ResolvedConfig): Promise<void> {
-  const cpOptions: CopyOptions = {
+  const cpDirOptions: CopyOptions = {
     recursive: true,
     filter: (src) =>
       !src.includes("__tests__") &&
@@ -152,8 +152,12 @@ async function buildServer(config: ResolvedConfig): Promise<void> {
 
   await Promise.all([
     // Copy dirs
-    ...[config.serverDir, join(config.rootDir, "shared")].map((src) =>
-      cp(src, config.serverOutDir, cpOptions).catch(() => {
+    ...["server", "shared"].map((src) =>
+      cp(
+        join(config.rootDir, src),
+        join(config.outDir, src),
+        cpDirOptions,
+      ).catch(() => {
         // Ignore errors
       }),
     ),
