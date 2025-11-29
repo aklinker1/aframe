@@ -162,7 +162,7 @@ async function buildServer(config: ResolvedConfig): Promise<void> {
       }),
     ),
     // Copy root files
-    ...["bun.lock", "bun.lockb", "tsconfig.json"].map((file) =>
+    ...["bun.lock", "bun.lockb", "tsconfig.json", ".npmrc"].map((file) =>
       cp(join(config.rootDir, file), join(config.outDir, file)).catch(() => {
         // Ignore errors
       }),
