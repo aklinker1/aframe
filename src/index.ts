@@ -176,6 +176,7 @@ async function buildServer(config: ResolvedConfig): Promise<void> {
     join(config.outDir, "package.json"),
     JSON.stringify(
       {
+        version: packageJson.version,
         dependencies: packageJson.dependencies,
         devDependencies: packageJson.devDependencies,
       },
