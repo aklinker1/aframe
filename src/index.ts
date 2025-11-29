@@ -1,4 +1,9 @@
-import { createReadStream, createWriteStream, lstatSync } from "node:fs";
+import {
+  createReadStream,
+  createWriteStream,
+  lstatSync,
+  type CopyOptions,
+} from "node:fs";
 import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import * as vite from "vite";
@@ -137,20 +142,29 @@ export async function build(config: ResolvedConfig) {
 }
 
 async function buildServer(config: ResolvedConfig): Promise<void> {
-  await cp(config.serverDir, config.serverOutDir, {
+  const cpOptions: CopyOptions = {
     recursive: true,
     filter: (src) =>
       !src.includes("__tests__") &&
       !src.includes(".test.") &&
       !src.includes(".spec."),
-  });
-  await Promise.all(
-    ["bun.lock", "bun.lockb", "tsconfig.json"].map((file) =>
+  };
+
+  await Promise.all([
+    // Copy dirs
+    ...[config.serverDir, join(config.rootDir, "shared")].map((src) =>
+      cp(src, config.serverOutDir, cpOptions).catch(() => {
+        // Ignore errors
+      }),
+    ),
+    // Copy root files
+    ...["bun.lock", "bun.lockb", "tsconfig.json"].map((file) =>
       cp(join(config.rootDir, file), join(config.outDir, file)).catch(() => {
         // Ignore errors
       }),
     ),
-  );
+  ]);
+
   const packageJson = await Bun.file(config.packageJsonPath)
     .json()
     .catch(() => ({}));
@@ -165,6 +179,7 @@ async function buildServer(config: ResolvedConfig): Promise<void> {
       2,
     ),
   );
+
   await Bun.write(
     join(config.outDir, "server-entry.ts"),
     `import { resolve } from 'node:path';
@@ -182,6 +197,7 @@ console.log(\`Server running @ http://localhost:\${port}\`);
 server.listen(port);
 `,
   );
+
   const installProc = Bun.spawn(
     ["bun", "i", "--production", "--frozen-lockfile"],
     {
