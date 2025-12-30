@@ -147,7 +147,6 @@ export async function build(config: ResolvedConfig) {
         outfile: config.compileOutputPath,
       },
       entrypoints: [config.serverEntryPath],
-      bytecode: true,
     });
     console.log(`${GREEN}✔${RESET} Compiled in ${compileTimer()}`);
     console.log(
