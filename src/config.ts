@@ -18,6 +18,11 @@ export type UserConfig = {
   appPort?: number;
   serverPort?: number;
   hooks?: AframeHooks;
+  /**
+   * Compile the app into a single binary using Bun.
+   * @default true
+   */
+  compile?: boolean;
 };
 
 export type PrerenderConfig = {
@@ -56,6 +61,7 @@ export type ResolvedConfig = {
   hooks: AframeHooks | undefined;
   serverEntryPath: string;
   compileOutputPath: string;
+  compile: boolean;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -158,5 +164,6 @@ export async function resolveConfig(
     vite: viteConfig,
     prerender: userConfig.prerender ?? {},
     hooks: userConfig.hooks,
+    compile: userConfig.compile ?? true,
   };
 }

@@ -4,7 +4,7 @@ import {
   lstatSync,
   type CopyOptions,
 } from "node:fs";
-import { cp, mkdir, readdir, rm } from "node:fs/promises";
+import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path/posix";
 import { pipeline } from "node:stream/promises";
 import { createGzip } from "node:zlib";
@@ -130,36 +130,45 @@ export async function build(config: ResolvedConfig) {
     files
       .map(([file, size], i, array) => {
         const boxChar = i === array.length - 1 ? "└" : "├";
-        return `   ${DIM}${boxChar}─ ${relativeOutDir}${RESET}${getColor(file)}${file.padEnd(fileColumnCount)}${RESET}  ${DIM}${prettyBytes(size)}${RESET}`;
+        return `  ${DIM}${boxChar}─ ${relativeOutDir}${RESET}${getColor(file)}${file.padEnd(fileColumnCount)}${RESET}  ${DIM}${prettyBytes(size)}${RESET}`;
       })
       .join("\n"),
   );
   console.log(`${CYAN}Σ Total size:${RESET} ${prettyBytes(totalSize)}`);
   console.log();
 
-  const compileTimer = createTimer();
-  console.log(`${BOLD}${CYAN}ℹ${RESET} Compiling single binary`);
+  if (config.compile) {
+    const compileTimer = createTimer();
+    console.log(`${BOLD}${CYAN}ℹ${RESET} Compiling single binary`);
 
-  await writeServerEntry(config, staticRoutes);
-  await Bun.build({
-    compile: {
-      outfile: config.compileOutputPath,
-    },
-    entrypoints: [config.serverEntryPath],
-  });
-  console.log(`${GREEN}✔${RESET} Compiled in ${compileTimer()}`);
-  console.log(
-    `  ${DIM}└─${RESET} ${BLUE}${relative(process.cwd(), config.compileOutputPath)}${RESET}  ${DIM}${prettyBytes(lstatSync(config.compileOutputPath).size)}${RESET}`,
-  );
+    await writeServerEntry(config, staticRoutes);
+    await Bun.build({
+      compile: {
+        outfile: config.compileOutputPath,
+      },
+      entrypoints: [config.serverEntryPath],
+      bytecode: true,
+    });
+    console.log(`${GREEN}✔${RESET} Compiled in ${compileTimer()}`);
+    console.log(
+      `  ${DIM}└─${RESET} ${BLUE}${relative(process.cwd(), config.compileOutputPath)}${RESET}  ${DIM}${prettyBytes(lstatSync(config.compileOutputPath).size)}${RESET}`,
+    );
+    console.log();
 
-  console.log();
+    console.log(
+      `To preview production build, run:
 
-  console.log(
-    `To preview production build, run:
-
-    ${GREEN}./${relative(process.cwd(), config.compileOutputPath)}${RESET}
+   ${GREEN}./${relative(process.cwd(), config.compileOutputPath)}${RESET}
 `,
-  );
+    );
+  } else {
+    console.log(
+      `To preview production build, run:
+
+   ${GREEN}bun run ${relative(process.cwd(), config.serverEntryPath)}${RESET}
+`,
+    );
+  }
 }
 
 async function buildServer(
@@ -196,7 +205,7 @@ async function buildServer(
   const packageJson = await Bun.file(config.packageJsonPath)
     .json()
     .catch(() => ({}));
-  await Bun.write(
+  await writeFile(
     join(config.outDir, "package.json"),
     JSON.stringify(
       {
@@ -209,7 +218,7 @@ async function buildServer(
     ),
   );
 
-  await writeServerEntry(config, staticRoutes); // No embedded files when prerendering.
+  await writeServerEntry(config, staticRoutes);
 
   const installProc = Bun.spawn(
     ["bun", "i", "--production", "--frozen-lockfile"],
@@ -240,7 +249,7 @@ async function writeServerEntry(
     staticDef.push("  },");
   }
 
-  await Bun.write(
+  await writeFile(
     join(config.outDir, "server-entry.ts"),
     `import { resolve } from 'node:path';
 ${staticRoutes
@@ -249,15 +258,13 @@ ${staticRoutes
     `import gzFile${i} from "./${filePath}.gz" with { type: "file" };`,
   ])
   .join("\n")}
-import { embeddedFiles } from "bun";
+import server from "./server/main";
 
 globalThis.aframe = {
   command: "build",
   publicDir: resolve(import.meta.dir, "public"),
 ${staticDef.join("\n")}
 };
-
-const { default: server } = await import("./server/main");
 
 const port = Number(process.env.PORT) || 3000;
 console.log(\`Server running @ http://localhost:\${port}\`);
@@ -292,7 +299,7 @@ async function gzipFiles(files: string[]): Promise<void> {
 }
 
 async function gzipFile(file: string): Promise<void> {
-  await Bun.write(`${file}.gz`, "");
+  await writeFile(`${file}.gz`, "");
   await pipeline(
     createReadStream(file),
     createGzip(),

@@ -1,5 +1,5 @@
-import { defineConfig } from "../src";
 import { join } from "node:path";
+import { defineConfig } from "../src";
 
 export default defineConfig({
   prerenderedRoutes: ["/", "/two"],
