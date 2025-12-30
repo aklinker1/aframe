@@ -1,6 +1,6 @@
-import * as vite from "vite";
-import { resolve, join, relative } from "node:path/posix";
+import { join, relative, resolve } from "node:path/posix";
 import type { LaunchOptions } from "puppeteer";
+import * as vite from "vite";
 
 export type AframeHooks = {
   afterServerBuild?: (config: ResolvedConfig) => Promise<void> | void;
@@ -54,6 +54,8 @@ export type ResolvedConfig = {
   prerenderedRoutes: string[];
   prerender: PrerenderConfig | false;
   hooks: AframeHooks | undefined;
+  serverEntryPath: string;
+  compileOutputPath: string;
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -75,6 +77,8 @@ export async function resolveConfig(
   const appOutDir = join(outDir, "public");
   const serverOutDir = join(outDir, "server");
   const prerenderedDir = join(outDir, "prerendered");
+  const serverEntryPath = join(outDir, "server-entry.ts");
+  const compileOutputPath = join(outDir, "server-entry");
 
   const configFile = join(rootDir, "aframe.config"); // No file extension to resolve any JS/TS file
   const relativeConfigFile = "./" + relative(import.meta.dir, configFile);
@@ -147,6 +151,8 @@ export async function resolveConfig(
     appPort,
     serverPort,
     proxyPaths,
+    serverEntryPath,
+    compileOutputPath,
 
     prerenderedRoutes: userConfig.prerenderedRoutes ?? ["/"],
     vite: viteConfig,

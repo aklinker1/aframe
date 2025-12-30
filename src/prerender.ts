@@ -1,5 +1,5 @@
+import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
 import type { Browser } from "puppeteer";
 import type { ResolvedConfig } from "./config";
 
@@ -71,7 +71,7 @@ export async function prerenderPages(
       const absolutePath = join(config.prerenderedDir, relativePath);
       const dir = dirname(absolutePath);
       await mkdir(dir, { recursive: true });
-      await writeFile(absolutePath, html);
+      await Bun.write(absolutePath, html);
       results.push({
         route,
         relativePath,
