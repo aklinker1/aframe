@@ -1,5 +1,5 @@
-import { dirname, join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import type { Browser } from "puppeteer";
 import type { ResolvedConfig } from "./config";
 

@@ -1,7 +1,7 @@
 {
   "name": "@aklinker1/aframe",
   "version": "1.0.4",
-  "packageManager": "bun@1.3.2",
+  "packageManager": "bun@1.3.5",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -21,13 +21,13 @@
     "check": "check",
     "aframe": "bun --silent bin/aframe.ts",
     "dev": "bun aframe demo",
-    "build": "bun aframe build demo && bun run demo/post-build.js",
+    "build": "bun aframe build demo",
     "preview": "bun --cwd demo/.output --env-file ../.env server-entry.js",
     "release": "bun run scripts/release.ts"
   },
   "devDependencies": {
     "@aklinker1/check": "^1.4.5",
-    "@types/bun": "latest",
+    "@types/bun": "^1.3.5",
     "oxlint": "^0.15.11",
     "prettier": "^3.5.2",
     "publint": "^0.3.6",

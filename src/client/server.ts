@@ -1,18 +1,9 @@
 import type { BunFile } from "bun";
-import { readFileSync } from "node:fs";
-import { join, extname, basename } from "node:path";
+import { basename, extname, join } from "node:path";
 
 export interface AframeServer {
   listen(port: number): void | never;
 }
-
-const staticPathsFile = join(aframe.rootDir, "static.json");
-const publicDir = aframe.publicDir;
-
-let staticPaths: Record<string, { cacheable: boolean; path: string }> = {};
-try {
-  staticPaths = JSON.parse(readFileSync(staticPathsFile, "utf-8"));
-} catch {}
 
 /**
  * Fetches a file from the `public` directory.
@@ -28,11 +19,8 @@ export function fetchStatic(options?: {
     const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
 
     // Fetch file on disk
-    if (staticPaths[path]) {
-      const filePath = join(aframe.rootDir, staticPaths[path].path);
-      const file = Bun.file(filePath);
-      const gzFile = Bun.file(filePath + ".gz");
-
+    if (aframe.static?.[path]) {
+      const { file, gzFile } = aframe.static[path];
       const customResponse = await options?.onFetch?.(path, file);
       if (customResponse) return customResponse;
 
@@ -72,13 +60,22 @@ export function fetchStatic(options?: {
     }
 
     // Fallback to public/index.html file
-    const file = Bun.file(join(publicDir, "index.html"));
-    const gzFile = Bun.file(join(publicDir, "index.html.gz"));
-    return new Response(gzFile.stream(), {
-      headers: {
-        "Content-Type": file.type,
-        "Content-Encoding": "gzip",
-      },
-    });
+    if (aframe.static?.["fallback"]) {
+      const { file, gzFile } = aframe.static["fallback"];
+      return createGzipResponse(file, gzFile);
+    }
+
+    const file = Bun.file(join(aframe.publicDir, "index.html"));
+    const gzFile = Bun.file(join(aframe.publicDir, "index.html.gz"));
+    return createGzipResponse(file, gzFile);
   };
+}
+
+function createGzipResponse(file: BunFile, gzFile: BunFile): Response {
+  return new Response(gzFile.stream(), {
+    headers: {
+      "Content-Type": file.type,
+      "Content-Encoding": "gzip",
+    },
+  });
 }
