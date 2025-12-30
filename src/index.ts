@@ -138,7 +138,7 @@ export async function build(config: ResolvedConfig) {
   console.log();
 
   const compileTimer = createTimer();
-  console.log(`${BOLD}${CYAN}ℹ${RESET} Compiling single binary...`);
+  console.log(`${BOLD}${CYAN}ℹ${RESET} Compiling single binary`);
 
   await writeServerEntry(config, staticRoutes);
   await Bun.build({
@@ -146,11 +146,6 @@ export async function build(config: ResolvedConfig) {
       outfile: config.compileOutputPath,
     },
     entrypoints: [config.serverEntryPath],
-    loader: {
-      ".js": "file",
-      ".css": "file",
-      ".html": "file",
-    },
   });
   console.log(`${GREEN}✔${RESET} Compiled in ${compileTimer()}`);
   console.log(
