@@ -145,6 +145,8 @@ export async function build(config: ResolvedConfig) {
     await Bun.build({
       compile: {
         outfile: config.compileOutputPath,
+        // @ts-expect-error: Missing type until 1.3.6: https://github.com/oven-sh/bun/commit/822d75a3802ecc1fc5439427e14bf0d57107e303
+        autoloadPackageJson: true,
       },
       entrypoints: [config.serverEntryPath],
     });
