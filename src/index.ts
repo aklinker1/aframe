@@ -149,6 +149,7 @@ export async function build(config: ResolvedConfig) {
         autoloadPackageJson: true,
       },
       entrypoints: [config.serverEntryPath],
+      target: "bun",
     });
     console.log(`${GREEN}✔${RESET} Compiled in ${compileTimer()}`);
     console.log(
