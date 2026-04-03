@@ -23,6 +23,10 @@ export type UserConfig = {
    * @default true
    */
   compile?: boolean;
+  /**
+   * List of dependencies to externalize. Native dependencies are good candidates.
+   */
+  external?: string[];
 };
 
 export type PrerenderConfig = {
@@ -62,6 +66,7 @@ export type ResolvedConfig = {
   serverEntryPath: string;
   compileOutputPath: string;
   compile: boolean;
+  external: string[];
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -165,5 +170,6 @@ export async function resolveConfig(
     prerender: userConfig.prerender ?? {},
     hooks: userConfig.hooks,
     compile: userConfig.compile ?? true,
+    external: userConfig.external ?? [],
   };
 }
