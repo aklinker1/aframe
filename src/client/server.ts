@@ -21,8 +21,10 @@ export function fetchStatic(options?: {
     // Fetch file on disk
     if (aframe.static?.[path]) {
       const { file, gzFile } = aframe.static[path];
-      const customResponse = await options?.onFetch?.(path, file);
-      if (customResponse) return customResponse;
+      if (options?.onFetch) {
+        const customResponse = await options.onFetch(path, file);
+        if (customResponse) return customResponse;
+      }
 
       return new Response(gzFile.stream(), {
         headers: {
@@ -62,10 +64,20 @@ export function fetchStatic(options?: {
     // Fallback to public/index.html file
     if (aframe.static?.["fallback"]) {
       const { file, gzFile } = aframe.static["fallback"];
+      if (options?.onFetch) {
+        const customResponse = await options.onFetch(path, file);
+        if (customResponse) return customResponse;
+      }
+
       return createGzipResponse(file, gzFile);
     }
 
     const file = Bun.file(join(aframe.publicDir, "index.html"));
+    if (options?.onFetch) {
+      const customResponse = await options.onFetch(path, file);
+      if (customResponse) return customResponse;
+    }
+
     const gzFile = Bun.file(join(aframe.publicDir, "index.html.gz"));
     return createGzipResponse(file, gzFile);
   };
