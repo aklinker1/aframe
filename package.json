@@ -5,37 +5,48 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/client/server.ts",
-    "./app": "./src/client/app.ts",
-    "./env": "./src/env.d.ts"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./server": {
+      "types": "./dist/client/server.d.mts",
+      "default": "./dist/client/server.mjs"
+    },
+    "./app": {
+      "types": "./dist/client/app.d.mts",
+      "default": "./dist/client/app.mjs"
+    },
+    "./env": {
+      "types": "./dist/env.d.mts"
+    }
   },
-  "bin": {
-    "aframe": "bin/aframe.ts"
-  },
+  "bin": "dist/aframe.mjs",
   "files": [
-    "src",
+    "dist",
     "bin"
   ],
   "scripts": {
     "check": "check",
     "aframe": "bun --silent bin/aframe.ts",
     "dev": "bun aframe demo",
-    "build": "bun aframe build demo",
+    "build": "tsdown --dts src/index.ts src/client/*.ts src/env.d.ts src/aframe.ts",
+    "build:demo": "bun aframe build demo",
     "preview": "bun --cwd demo/.output --env-file ../.env server-entry.js",
     "release": "bun run scripts/release.ts"
   },
   "devDependencies": {
-    "@aklinker1/check": "^1.4.5",
-    "@types/bun": "^1.3.5",
+    "@aklinker1/check": "^2.4.0",
     "oxlint": "^0.15.11",
     "prettier": "^3.5.2",
     "publint": "^0.3.6",
     "puppeteer": "^24.4.0",
+    "tsdown": "^0.21.10",
     "typescript": "^5.0.0",
     "vite": "^6.1.1"
   },
   "peerDependencies": {
+    "@types/bun": "^1.3.5",
     "vite": "*",
     "puppeteer": "*"
   },
