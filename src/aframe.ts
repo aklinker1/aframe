@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env bun
 import { build, createServer } from "../src";
 import { resolveConfig } from "../src/config";
 import { RESET, BOLD, GREEN, CYAN } from "../src/color";
