@@ -103,7 +103,12 @@ async function waitForServer(
 function isPortOccupied(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const sock = createConnection(port, "localhost");
-    sock.once("connect", () => resolve(true));
-    sock.once("error", () => resolve(false));
+    const end = (res: boolean) => {
+      sock.end();
+      resolve(res)
+    }
+
+    sock.once("connect", () => end(true));
+    sock.once("error", () => end(false));
   });
 }
