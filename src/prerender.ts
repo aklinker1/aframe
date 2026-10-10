@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { createConnection, Socket } from "node:net";
+import { createConnection } from "node:net";
 import { dirname, join } from "node:path";
 import type { Browser } from "puppeteer";
 import type { ResolvedConfig } from "./config";
@@ -88,17 +88,20 @@ export async function prerenderPages(
   return results;
 }
 
-async function waitForServer(port: number, options: { timeout: number }): Promise<void> {
+async function waitForServer(
+  port: number,
+  options: { timeout: number },
+): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < options.timeout) {
     if (await isPortOccupied(port)) return;
-    await Bun.sleep(100)
+    await Bun.sleep(100);
   }
   throw Error(`Server did not start within ${options.timeout}ms`);
 }
 
 function isPortOccupied(port: number): Promise<boolean> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const sock = createConnection(port, "localhost");
     sock.once("connect", () => resolve(true));
     sock.once("error", () => resolve(false));
