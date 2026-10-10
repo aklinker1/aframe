@@ -4,6 +4,9 @@
   "packageManager": "bun@1.3.5",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "url": "git+https://github.com/aklinker1/aframe.git"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
