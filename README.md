@@ -80,7 +80,6 @@ bun add -D puppeteer vite
   "version": "1.0.0",
   "packageManager": "bun@1.2.2",
   "scripts": {
-    "aframe": "bun node_modules/@aklinker1/aframe/bin/aframe.ts",
     "dev": "bun --silent aframe",
     "build": "bun --silent aframe build",
     "preview": "bun .output/server-entry.js",

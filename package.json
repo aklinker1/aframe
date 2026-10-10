@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "check": "check",
-    "aframe": "bun --silent bin/aframe.ts",
+    "aframe": "bun --silent src/aframe.ts",
     "dev": "bun aframe demo",
     "build": "tsdown --dts src/index.ts src/client/*.ts src/env.d.ts src/aframe.ts",
     "build:demo": "bun aframe build demo",
