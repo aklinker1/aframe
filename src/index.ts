@@ -215,6 +215,7 @@ async function buildServer(
         version: packageJson.version,
         dependencies: packageJson.dependencies,
         devDependencies: packageJson.devDependencies,
+        overrides: packageJson.overrides,
       },
       null,
       2,
