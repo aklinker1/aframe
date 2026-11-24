@@ -94,7 +94,7 @@ export async function build(config: ResolvedConfig) {
     (max, [file]) => Math.max(file.length, max),
     0,
   );
-  const totalSize = files.reduce((sum, [_, bytes]) => sum + bytes, 0);
+  const totalSize = files.reduce((sum, [, bytes]) => sum + bytes, 0);
   console.log(
     files
       .map(([file, size], i, array) => {

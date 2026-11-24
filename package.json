@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@aklinker1/check": "^2.4.0",
-    "oxlint": "^0.15.11",
+    "oxlint": "^1.95.0",
     "prettier": "^3.5.2",
     "publint": "^0.3.6",
     "puppeteer": "^24.4.0",
