@@ -9,24 +9,13 @@ export type AframeHooks = {
 export type UserConfig = {
   vite?: vite.UserConfigExport;
   /**
-   * Paths for vite to proxy to the backend during development.
-   * @default ["/api"]
+   * Routes to prerender during `aframe build`. Each must start with `/` and
+   * contain no `?` or `#`.
+   * @default ["/"]
    */
-  proxyPaths?: string[];
   prerenderedRoutes?: string[];
   prerender?: PrerenderConfig | false;
-  appPort?: number;
-  serverPort?: number;
   hooks?: AframeHooks;
-  /**
-   * Compile the app into a single binary using Bun.
-   * @default true
-   */
-  compile?: boolean;
-  /**
-   * List of dependencies to externalize. Native dependencies are good candidates.
-   */
-  external?: string[];
 };
 
 export type PrerenderConfig = {
@@ -51,22 +40,14 @@ export type ResolvedConfig = {
   appDir: string;
   publicDir: string;
   serverDir: string;
-  serverModule: string;
   prerenderedDir: string;
-  proxyPaths: string[];
   outDir: string;
   serverOutDir: string;
   appOutDir: string;
-  appPort: number;
-  serverPort: number;
   vite: vite.InlineConfig;
   prerenderedRoutes: string[];
   prerender: PrerenderConfig | false;
   hooks: AframeHooks | undefined;
-  serverEntryPath: string;
-  compileOutputPath: string;
-  compile: boolean;
-  external: string[];
 };
 
 export function defineConfig(config: UserConfig): UserConfig {
@@ -82,23 +63,17 @@ export async function resolveConfig(
   const packageJsonPath = join(rootDir, "package.json");
   const appDir = join(rootDir, "app");
   const serverDir = join(rootDir, "server");
-  const serverModule = join(serverDir, "main.ts");
   const publicDir = join(rootDir, "public");
   const outDir = join(rootDir, ".output");
   const appOutDir = join(outDir, "public");
   const serverOutDir = join(outDir, "server");
   const prerenderedDir = join(outDir, "prerendered");
-  const serverEntryPath = join(outDir, "server-entry.ts");
-  const compileOutputPath = join(outDir, "server-entry");
 
   const configFile = join(rootDir, "aframe.config"); // No file extension to resolve any JS/TS file
   const relativeConfigFile = "./" + relative(import.meta.dir, configFile);
   const { default: userConfig }: { default: UserConfig } = await import(
     relativeConfigFile
   );
-
-  const appPort = userConfig.appPort || 3000;
-  const serverPort = userConfig.serverPort || 3001;
 
   let viteConfig = await vite.defineConfig((await userConfig.vite) ?? {});
   if (typeof viteConfig === "function") {
@@ -119,14 +94,6 @@ export async function resolveConfig(
   );
 
   // Override required config
-  const proxyPaths = userConfig.proxyPaths ?? ["/api"];
-  const proxy: Record<string, string | vite.ProxyOptions> = {};
-  proxyPaths.forEach((path) => {
-    proxy[path] = {
-      target: `http://localhost:${serverPort}`,
-      changeOrigin: true,
-    };
-  });
   viteConfig = vite.mergeConfig<vite.InlineConfig, vite.InlineConfig>(
     // Defaults
     viteConfig,
@@ -140,11 +107,6 @@ export async function resolveConfig(
         emptyOutDir: false,
         outDir: appOutDir,
       },
-      server: {
-        port: appPort,
-        strictPort: true,
-        proxy,
-      },
     },
   );
 
@@ -154,22 +116,14 @@ export async function resolveConfig(
     appDir,
     publicDir,
     serverDir,
-    serverModule,
     outDir,
     serverOutDir,
     appOutDir,
     prerenderedDir,
-    appPort,
-    serverPort,
-    proxyPaths,
-    serverEntryPath,
-    compileOutputPath,
 
     prerenderedRoutes: userConfig.prerenderedRoutes ?? ["/"],
     vite: viteConfig,
     prerender: userConfig.prerender ?? {},
     hooks: userConfig.hooks,
-    compile: userConfig.compile ?? true,
-    external: userConfig.external ?? [],
   };
 }

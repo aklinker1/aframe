@@ -14,28 +14,27 @@
     },
     "./server": {
       "types": "./dist/client/server.d.mts",
+      "aframe-dev": "./dist/client/dev.mjs",
       "default": "./dist/client/server.mjs"
     },
     "./app": {
       "types": "./dist/client/app.d.mts",
       "default": "./dist/client/app.mjs"
-    },
-    "./env": {
-      "types": "./dist/env.d.mts"
     }
   },
   "bin": "dist/aframe.mjs",
   "files": [
-    "dist",
-    "bin"
+    "dist"
   ],
   "scripts": {
     "check": "check",
     "aframe": "bun --silent src/aframe.ts",
-    "dev": "bun aframe demo",
-    "build": "tsdown --dts src/index.ts src/client/*.ts src/env.d.ts src/aframe.ts",
-    "build:demo": "bun aframe build demo",
-    "preview": "bun --cwd demo/.output --env-file ../.env server-entry.js",
+    "dev": "bun --env-file demo/.env --watch demo/server/main.ts",
+    "build": "tsdown --dts src/index.ts src/client/*.ts src/aframe.ts",
+    "build:demo": "NODE_ENV=production bun aframe build demo",
+    "preview": "NODE_ENV=production bun --env-file demo/.env demo/.output/server/main.ts",
+    "test": "bun test src",
+    "test:e2e": "bun test e2e",
     "release": "bun run scripts/release.ts",
     "prepack": "bun run build"
   },

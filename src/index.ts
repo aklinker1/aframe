@@ -15,10 +15,12 @@ import { prerenderPages, type PrerenderedRoute } from "./prerender";
 import { createTimer } from "./timer";
 
 export * from "./config";
-export * from "./dev-server";
 
 export async function build(config: ResolvedConfig) {
   const buildTimer = createTimer();
+
+  validatePrerenderedRoutes(config.prerenderedRoutes);
+  if (config.prerender !== false) assertPuppeteerInstalled(config.rootDir);
 
   // Clear outDir
   await rm(config.outDir, { force: true, recursive: true });
@@ -28,50 +30,33 @@ export async function build(config: ResolvedConfig) {
   console.log(
     `${BOLD}${CYAN}ℹ${RESET} Building ${CYAN}./app${RESET} with ${GREEN}Vite ${vite.version}${RESET}`,
   );
-  const appOutput = (await vite.build(config.vite)) as vite.Rollup.RollupOutput;
+  const buildOutput = await vite.build(config.vite);
   console.log(`${GREEN}✔${RESET} Built in ${appTimer()}`);
+
+  const rollupOutputs = (
+    Array.isArray(buildOutput) ? buildOutput : [buildOutput]
+  ) as vite.Rollup.RollupOutput[];
+  const immutableFiles = rollupOutputs
+    .flatMap((output) => output.output ?? [])
+    .map((entry) => entry.fileName)
+    .filter((fileName) => !fileName.endsWith(".html"));
+  await writeFile(
+    join(config.outDir, "immutable.json"),
+    JSON.stringify(immutableFiles, null, 2),
+  );
 
   const allAbsoluteAppFiles = (
     await readdir(config.appOutDir, { recursive: true, withFileTypes: true })
   )
     .filter((entry) => entry.isFile())
     .map((entry) => join(entry.parentPath, entry.name));
-  const allAppFiles = allAbsoluteAppFiles.map((path) =>
-    relative(config.appOutDir, path),
-  );
-
-  const bundledAppFiles = appOutput.output.map((entry) => entry.fileName);
-  const bundledAppFileSet = new Set(bundledAppFiles);
-  const publicAppFiles = allAppFiles.filter(
-    (file) => !bundledAppFileSet.has(file),
-  );
-
   await gzipFiles(allAbsoluteAppFiles);
-
-  const staticRoutes: StaticRouteArray = [
-    ...Array.from(bundledAppFiles)
-      .filter((path) => path !== "index.html")
-      .map((path) => ({
-        route: `/${path}`,
-        cacheable: true,
-        filePath: `public/${path}`,
-        gzPath: `public/${path}.gz`,
-      })),
-    ...publicAppFiles
-      .filter((path) => path !== "index.html")
-      .flatMap((path) => ({
-        route: `/${path}`,
-        cacheable: false,
-        filePath: `public/${path}`,
-        gzPath: `public/${path}.gz`,
-      })),
-  ];
 
   console.log();
 
   const serverTimer = createTimer();
   console.log(`${BOLD}${CYAN}ℹ${RESET} Preparing ${CYAN}./server${RESET}`);
-  await buildServer(config, staticRoutes);
+  await buildServer(config);
   console.log(`${GREEN}✔${RESET} Done in ${serverTimer()}`);
 
   console.log();
@@ -92,22 +77,6 @@ export async function build(config: ResolvedConfig) {
   }
 
   await gzipFiles(prerendered.map((entry) => entry.absolutePath));
-
-  staticRoutes.push({
-    route: "fallback",
-    cacheable: false,
-    filePath: "public/index.html",
-    gzPath: "public/index.html.gz",
-  });
-  for (const entry of prerendered) {
-    staticRoutes.push({
-      route: entry.route,
-      cacheable: false,
-      filePath: `prerendered/${entry.relativePath}`,
-      gzPath: `prerendered/${entry.relativePath}.gz`,
-    });
-  }
-  await writeServerEntry(config, staticRoutes);
 
   console.log();
 
@@ -137,47 +106,15 @@ export async function build(config: ResolvedConfig) {
   console.log(`${CYAN}Σ Total size:${RESET} ${prettyBytes(totalSize)}`);
   console.log();
 
-  if (config.compile) {
-    const compileTimer = createTimer();
-    console.log(`${BOLD}${CYAN}ℹ${RESET} Compiling single binary`);
+  console.log(
+    `To preview production build, run:
 
-    await writeServerEntry(config, staticRoutes);
-    await Bun.build({
-      compile: {
-        outfile: config.compileOutputPath,
-        // @ts-expect-error: Missing type until 1.3.6: https://github.com/oven-sh/bun/commit/822d75a3802ecc1fc5439427e14bf0d57107e303
-        autoloadPackageJson: true,
-      },
-      entrypoints: [config.serverEntryPath],
-      external: config.external,
-      target: "bun",
-    });
-    console.log(`${GREEN}✔${RESET} Compiled in ${compileTimer()}`);
-    console.log(
-      `  ${DIM}└─${RESET} ${BLUE}${relative(process.cwd(), config.compileOutputPath)}${RESET}  ${DIM}${prettyBytes(lstatSync(config.compileOutputPath).size)}${RESET}`,
-    );
-    console.log();
-
-    console.log(
-      `To preview production build, run:
-
-   ${GREEN}./${relative(process.cwd(), config.compileOutputPath)}${RESET}
+   ${GREEN}NODE_ENV=production bun ${relative(process.cwd(), join(config.serverOutDir, "main.ts"))}${RESET}
 `,
-    );
-  } else {
-    console.log(
-      `To preview production build, run:
-
-   ${GREEN}bun run ${relative(process.cwd(), config.serverEntryPath)}${RESET}
-`,
-    );
-  }
+  );
 }
 
-async function buildServer(
-  config: ResolvedConfig,
-  staticRoutes: StaticRouteArray,
-): Promise<void> {
+async function buildServer(config: ResolvedConfig): Promise<void> {
   const cpDirOptions: CopyOptions = {
     recursive: true,
     filter: (src) =>
@@ -222,8 +159,6 @@ async function buildServer(
     ),
   );
 
-  await writeServerEntry(config, staticRoutes);
-
   const installProc = Bun.spawn(
     ["bun", "i", "--production", "--frozen-lockfile"],
     {
@@ -236,45 +171,6 @@ async function buildServer(
   }
 
   await config.hooks?.afterServerBuild?.(config);
-}
-
-async function writeServerEntry(
-  config: ResolvedConfig,
-  staticRoutes: StaticRouteArray,
-): Promise<void> {
-  const staticDef: string[] = [];
-  if (staticRoutes.length > 0) {
-    staticDef.push("  static: {");
-    staticRoutes.forEach((entry, i) => {
-      staticDef.push(
-        `  "${entry.route}": { file: Bun.file(file${i}), cacheable: ${entry.cacheable}, gzFile: Bun.file(gzFile${i}) },`,
-      );
-    });
-    staticDef.push("  },");
-  }
-
-  await writeFile(
-    join(config.outDir, "server-entry.ts"),
-    `import { resolve } from 'node:path';
-${staticRoutes
-  .flatMap(({ filePath }, i) => [
-    `import file${i} from "./${filePath}" with { type: "file" };`,
-    `import gzFile${i} from "./${filePath}.gz" with { type: "file" };`,
-  ])
-  .join("\n")}
-import server from "./server/main";
-
-globalThis.aframe = {
-  command: "build",
-  publicDir: resolve(import.meta.dir, "public"),
-${staticDef.join("\n")}
-};
-
-const port = Number(process.env.PORT) || 3000;
-console.log(\`Server running @ http://localhost:\${port}\`);
-server.listen(port);
-`,
-  );
 }
 
 function getColor(file: string) {
@@ -334,10 +230,22 @@ async function listDirFiles(
   return files;
 }
 
-type StaticRouteEntry = {
-  route: string;
-  filePath: string;
-  gzPath: string;
-  cacheable: boolean;
-};
-type StaticRouteArray = StaticRouteEntry[];
+function validatePrerenderedRoutes(routes: string[]): void {
+  for (const route of routes) {
+    if (!route.startsWith("/") || route.includes("?") || route.includes("#")) {
+      throw new Error(
+        `Invalid prerendered route ${JSON.stringify(route)}: routes must start with "/" and not contain "?" or "#"`,
+      );
+    }
+  }
+}
+
+function assertPuppeteerInstalled(rootDir: string): void {
+  try {
+    Bun.resolveSync("puppeteer", rootDir);
+  } catch {
+    throw new Error(
+      `Puppeteer is required for prerendering, but it could not be resolved from ${rootDir}.\n  Install it with: bun add -D puppeteer\n  Or disable prerendering with: prerender: false`,
+    );
+  }
+}

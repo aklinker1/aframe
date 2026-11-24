@@ -1,21 +1,15 @@
-import { fetchStatic, type AframeServer } from "@aklinker1/aframe/server";
 import {} from "oxlint";
+import { fetchApp } from "@aklinker1/aframe/server";
 
 console.log("process.env.EXAMPLE:", process.env.EXAMPLE);
 
-const _fetchStatic = fetchStatic();
+const app = fetchApp();
 
-const server: AframeServer = {
-  listen(port) {
-    Bun.serve({
-      fetch: (request) => {
-        const url = new URL(request.url);
-        if (url.pathname === "/api") return Response.json({ status: "UP" });
-        return _fetchStatic(request);
-      },
-      port,
-    });
+export default {
+  fetch(request: Request) {
+    if (new URL(request.url).pathname.startsWith("/api")) {
+      return Response.json({ status: "UP" });
+    }
+    return app(request);
   },
 };
-
-export default server;

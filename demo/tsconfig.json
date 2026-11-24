@@ -18,7 +18,7 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "@aklinker1/aframe/server": ["../src/client/server"]
+      "@aklinker1/aframe/server": ["../src/client/dev"]
     }
   }
 }

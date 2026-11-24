@@ -5,11 +5,10 @@ export default defineConfig({
   prerenderedRoutes: ["/", "/two"],
   hooks: {
     afterServerBuild: async (config) => {
-      // Update tsconfig path alias
       const file = Bun.file(join(config.outDir, "tsconfig.json"));
       const text = await file.text();
-      const fixedText = text.replace(
-        `"../src/client/server"`,
+      const fixedText = text.replaceAll(
+        `"../src/client/dev"`,
         `"../../src/client/server"`,
       );
       await file.write(fixedText);
