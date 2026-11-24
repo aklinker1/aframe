@@ -46,7 +46,7 @@ const app = fetchApp();
 // else to `fetchApp`.
 Bun.serve({
   fetch(request) {
-    if (new URL(request.url).startsWith("/api")) {
+    if (new URL(request.url).pathname.startsWith("/api")) {
       return Response.json({ status: "UP" });
     }
     return app(request);
@@ -117,9 +117,9 @@ The `--conditions aframe-dev` flag is a [package export condition](https://nodej
 
 Keep these in mind:
 
-- **Don't set `port`** on the default export or call `Bun.serve({ port })` yourself. aframe controls the port with `PORT`/`BUN_PORT` while prerendering, and a hardcoded port breaks it. Use `PORT` to change the port.
+- **Don't hardcode a port.** aframe sets `PORT` (and `BUN_PORT`) while prerendering, and a hardcoded port, like `Bun.serve({ port: 3000 })` or `.listen(3000)`, breaks it. Read `PORT` instead, or leave the port unset if your server does.
 - **Return your own 404s.** `fetchApp` falls back to the SPA's `index.html` (with a 200) for unmatched paths without a file extension, so an unknown `GET /api/x` that reaches it returns HTML.
-- **Dev only serves `localhost`.** Requests with another `Host` get a 403 unless it is in Vite's `server.allowedHosts`. Optionally set `hostname: "localhost"` on your default export to also bind only the loopback interface.
+- **Dev only serves `localhost`.** Requests with another `Host` get a 403 unless it is in Vite's `server.allowedHosts`. Optionally set `hostname: "localhost"` in your server's options to also bind only the loopback interface.
 - **`HTTP_PROXY`**: Bun's `fetch` honors it, even for loopback. If you're behind a proxy, set `NO_PROXY=127.0.0.1` before starting the process.
 - Vite is cold-started every time `bun --watch` restarts your server. The page reloads itself when it reconnects.
 
@@ -132,9 +132,10 @@ import { fetchApp } from "@aklinker1/aframe/server";
 
 const app = fetchApp();
 
-export default new Elysia()
+new Elysia()
   .get("/api/user/:id", ({ params }) => params.id)
-  .all("*", ({ request }) => app(request));
+  .all("*", ({ request }) => app(request))
+  .listen(Number(process.env.PORT) || 3000);
 ```
 
 ### Hono

@@ -1,7 +1,7 @@
 import type { Subprocess } from "bun";
 
 export const SERVER_HINT =
-  "server/main.ts must default-export an object with fetch() and must not set its own port";
+  "server/main.ts must start a server (like Bun.serve) on the PORT environment variable and must not hardcode its own port";
 
 export interface ServerProcessOptions {
   cmd: string[];
