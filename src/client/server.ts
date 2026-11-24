@@ -1,8 +1,8 @@
 import type { BunFile } from "bun";
 import { existsSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
-import { resolveRoot } from "../lib/root";
-import type { FetchApp, FetchAppOptions } from "../lib/types";
+import { resolveRoot } from "../internal/root";
+import type { FetchApp, FetchAppOptions } from "../internal/types";
 
 /**
  * Returns a `fetch` function that serves the built and prerendered files from

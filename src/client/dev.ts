@@ -4,10 +4,10 @@ import {
   cleanRequestHeaders,
   cleanResponseHeaders,
   isHostAllowed,
-} from "../lib/http";
-import { findFreePort, isPortFree } from "../lib/net";
-import { resolveRoot } from "../lib/root";
-import type { FetchApp, FetchAppOptions } from "../lib/types";
+} from "../internal/http";
+import { findFreePort, isPortFree } from "../internal/net";
+import { resolveRoot } from "../internal/root";
+import type { FetchApp, FetchAppOptions } from "../internal/types";
 
 const DEFAULT_HMR_PORT = 24678;
 

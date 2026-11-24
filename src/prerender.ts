@@ -2,8 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { Browser } from "puppeteer";
 import type { ResolvedConfig } from "./config";
-import { findFreePort } from "./lib/net";
-import { withServerProcess } from "./lib/server-process";
+import { findFreePort } from "./internal/net";
+import { withServerProcess } from "./internal/server-process";
 
 export type PrerenderedRoute = {
   route: string;
