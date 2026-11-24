@@ -1,8 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { createConnection } from "node:net";
 import { dirname, join } from "node:path";
 import type { Browser } from "puppeteer";
 import type { ResolvedConfig } from "./config";
+import { findFreePort } from "./internal/net";
+import { withServerProcess } from "./internal/server-process";
 
 export type PrerenderedRoute = {
   route: string;
@@ -24,91 +25,70 @@ export async function prerenderPages(
     waitForTimeout,
   } = config.prerender ?? {};
 
-  const server = Bun.spawn({
-    cmd: ["bun", join(config.outDir, "server-entry.ts")],
-    cwd: config.rootDir,
-    stdio: ["inherit", "inherit", "inherit"],
-  });
-  await waitForServer(config.appPort, { timeout });
-
+  const port = await findFreePort();
   const results: PrerenderedRoute[] = [];
-  let browser: Browser | undefined;
 
-  try {
-    let args = launch?.args ?? [];
-    // Workaround for Linux SUID Sandbox issues.
-    if (process.platform === "linux" && !args.includes("--no-sandbox")) {
-      args.push("--no-sandbox", "--disable-setuid-sandbox");
-    }
-
-    browser = await puppeteer.launch({
-      headless: true,
+  await withServerProcess(
+    {
+      cmd: [process.execPath, join(config.serverOutDir, "main.ts")],
+      cwd: config.rootDir,
+      env: {
+        ...process.env,
+        PORT: String(port),
+        BUN_PORT: String(port),
+        NODE_ENV: "production",
+      },
+      port,
       timeout,
-      ...launch,
-      args,
-    });
-    for (const route of config.prerenderedRoutes) {
-      const url = new URL(route, `http://localhost:${config.appPort}`);
-      const page = await browser.newPage();
-      page.evaluateOnNewDocument(`globalThis.__AFRAME_PRERENDERING = true`);
-      page.setDefaultTimeout(timeout);
-      page.setDefaultNavigationTimeout(timeout);
-      await page.goto(url.href);
-      if (waitForSelector) {
-        await page.waitForSelector(waitForSelector, {
-          visible: waitForSelectorVisible,
+    },
+    async () => {
+      let browser: Browser | undefined;
+      try {
+        let args = launch?.args ?? [];
+        // Workaround for Linux SUID Sandbox issues.
+        if (process.platform === "linux" && !args.includes("--no-sandbox")) {
+          args.push("--no-sandbox", "--disable-setuid-sandbox");
+        }
+
+        browser = await puppeteer.launch({
+          headless: true,
+          timeout,
+          ...launch,
+          args,
         });
-      } else if (waitForTimeout != null) {
-        await new Promise((res) => setTimeout(res, waitForTimeout));
+        for (const route of config.prerenderedRoutes) {
+          const url = new URL(route, `http://localhost:${port}`);
+          const page = await browser.newPage();
+          page.evaluateOnNewDocument(`globalThis.__AFRAME_PRERENDERING = true`);
+          page.setDefaultTimeout(timeout);
+          page.setDefaultNavigationTimeout(timeout);
+          await page.goto(url.href);
+          if (waitForSelector) {
+            await page.waitForSelector(waitForSelector, {
+              visible: waitForSelectorVisible,
+            });
+          } else if (waitForTimeout != null) {
+            await new Promise((res) => setTimeout(res, waitForTimeout));
+          }
+
+          const html = await page.content();
+          await page.close();
+
+          if (html.includes("<vite-error-overlay>")) {
+            throw Error("Vite error prevented page from being rendered.");
+          }
+
+          const relativePath = join(route.substring(1), "index.html");
+          const absolutePath = join(config.prerenderedDir, relativePath);
+          await mkdir(dirname(absolutePath), { recursive: true });
+          await writeFile(absolutePath, html);
+          results.push({ route, relativePath, absolutePath });
+        }
+      } finally {
+        await browser?.close();
       }
-
-      const html = await page.content();
-      await page.close();
-
-      if (html.includes("<vite-error-overlay>")) {
-        throw Error("Vite error prevented page from being rendered.");
-      }
-
-      const relativePath = join(route.substring(1), "index.html");
-      const absolutePath = join(config.prerenderedDir, relativePath);
-      const dir = dirname(absolutePath);
-      await mkdir(dir, { recursive: true });
-      await writeFile(absolutePath, html);
-      results.push({
-        route,
-        relativePath,
-        absolutePath,
-      });
-    }
-  } finally {
-    server.kill("SIGINT");
-    await browser?.close();
-  }
+    },
+  );
 
   return results;
-}
-
-async function waitForServer(
-  port: number,
-  options: { timeout: number },
-): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < options.timeout) {
-    if (await isPortOccupied(port)) return;
-    await Bun.sleep(100);
-  }
-  throw Error(`Server did not start within ${options.timeout}ms`);
-}
-
-function isPortOccupied(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const sock = createConnection(port, "localhost");
-    const end = (res: boolean) => {
-      sock.end();
-      resolve(res)
-    }
-
-    sock.once("connect", () => end(true));
-    sock.once("error", () => end(false));
-  });
 }
