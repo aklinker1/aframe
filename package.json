@@ -34,7 +34,6 @@
     "build:demo": "NODE_ENV=production bun aframe build demo",
     "preview": "NODE_ENV=production bun --env-file demo/.env demo/.output/server/main.ts",
     "test": "bun test src",
-    "test:e2e": "bun test e2e",
     "release": "bun run scripts/release.ts",
     "prepack": "bun run build"
   },
