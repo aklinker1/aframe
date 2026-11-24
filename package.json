@@ -1,5 +1,6 @@
 {
   "name": "@aklinker1/aframe",
+  "description": "Simple wrapper around Vite for creating pre-rendered, client-side web apps with a backend.",
   "version": "2.0.5",
   "packageManager": "bun@1.3.5",
   "type": "module",
